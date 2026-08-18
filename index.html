@@ -247,7 +247,8 @@
   .field{margin-bottom:14px;}
   .field-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
 
-  table{width:100%; border-collapse:collapse;}
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  table{width:100%; border-collapse:collapse; min-width:520px;}
   th{text-align:left; color:var(--text-faint); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em; padding:10px 14px; border-bottom:1px solid var(--border);}
   td{padding:13px 14px; font-size:13.5px; border-bottom:1px solid var(--border);}
   tr:last-child td{border-bottom:none;}
@@ -589,10 +590,10 @@
             <h3>Todos os clientes</h3>
             <button class="btn btn-gold" onclick="openClienteModal(null)">+ Novo cliente</button>
           </div>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Nome</th><th>WhatsApp</th><th>Empresa/Podcast</th><th>Indicado por</th><th>Gravações</th><th class="col-valor">Total gasto</th><th></th></tr></thead>
             <tbody id="clientesTbody"></tbody>
-          </table>
+          </table></div>
         </div>
       </div>
 
@@ -602,10 +603,10 @@
         <div class="panel" style="margin-top:20px;">
           <div class="panel-head"><h3>Histórico de entregas</h3></div>
           <p class="contact-note" style="margin:0 20px 12px;">Clique numa entrega pra ver o resumo, marcar pagamento ou enviar o contrato.</p>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Pagamento</th></tr></thead>
             <tbody id="historicoEntregasBody"></tbody>
-          </table>
+          </table></div>
         </div>
       </div>
 
@@ -661,34 +662,34 @@
 
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Reservas do período (recebido / a receber)</h3></div>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Forma</th><th>Status</th><th></th></tr></thead>
             <tbody id="finReservasTbody"></tbody>
-          </table>
+          </table></div>
         </div>
 
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Contas a pagar</h3></div>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Vencimento</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
             <tbody id="finAPagarTbody"></tbody>
-          </table>
+          </table></div>
         </div>
 
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Despesas pagas no período</h3></div>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Vencimento</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
             <tbody id="finPagasTbody"></tbody>
-          </table>
+          </table></div>
         </div>
 
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Despesas por categoria (período)</h3></div>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Categoria</th><th>Total</th></tr></thead>
             <tbody id="finCategoriasTbody"></tbody>
-          </table>
+          </table></div>
         </div>
 
         <div class="panel">
@@ -700,10 +701,10 @@
               <button class="icon-btn" onclick="saveComissaoPct()">Salvar</button>
             </div>
           </div>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Indicado por</th><th>Reservas pagas</th><th>Base (recebido)</th><th>Comissão</th></tr></thead>
             <tbody id="finComissoesTbody"></tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>
