@@ -239,8 +239,8 @@
   .panel-head h3{font-size:14.5px; font-weight:700;}
   .panel-body{padding:20px;}
 
-  input[type=text],input[type=date],input[type=time],input[type=number],input[type=tel],select,textarea{
-    background:var(--card2); border:1px solid var(--border2); border-radius:8px; padding:10px 12px; font-size:13.5px; width:100%; outline:none;
+  input[type=text],input[type=date],input[type=time],input[type=number],input[type=tel],input[type=password],select,textarea{
+    background:var(--card2); border:1px solid var(--border2); border-radius:8px; padding:10px 12px; font-size:13.5px; width:100%; outline:none; color:var(--text);
   }
   input:focus,select:focus,textarea:focus{border-color:var(--gold);}
   label{font-size:11.5px; color:var(--text-dim); font-weight:700; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:.03em;}
@@ -379,10 +379,11 @@
     .topbar > div:last-child{display:none;}
   }
 
+  .print-header{display:none;}
+
   @media print{
-    #site, .side, .side-overlay, #mobileToggle, .modal-bg{display:none !important;}
+    #site, .side, .side-overlay, #mobileToggle, .modal-bg, .topbar{display:none !important;}
     .main{height:auto; overflow:visible;}
-    .topbar{position:static; border-bottom:2px solid #000;}
     .view{padding:0;}
     body, .view-panel{background:#fff !important; color:#000 !important;}
     .panel{background:#fff !important; border:1px solid #999 !important; break-inside:avoid; margin-bottom:14px !important;}
@@ -394,6 +395,12 @@
     .view-panel:not(.on){display:none !important;}
     .table-scroll{overflow:visible !important;}
     table{min-width:0 !important;}
+    .print-header{
+      display:flex !important; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:16px; border-bottom:1px solid #999;
+    }
+    .print-header img{width:56px; height:56px; border-radius:50%; object-fit:cover;}
+    .print-header-title{font-size:19px; font-weight:800; color:#000;}
+    .print-header-sub{font-size:12px; color:#555; margin-top:2px;}
   }
 </style>
 </head>
@@ -657,6 +664,13 @@
 
       <!-- DASHBOARD -->
       <div class="view-panel" id="view-dashboard">
+        <div class="print-header">
+          <img src="assets/logo.jpeg" alt="Enterprise Podcast Studio">
+          <div>
+            <div class="print-header-title">Enterprise Podcast Studio</div>
+            <div class="print-header-sub">Relatório do Dashboard — <span id="printHeaderPeriod"></span></div>
+          </div>
+        </div>
         <div class="fin-period-bar">
           <div class="day-nav">
             <button class="icon-btn" onclick="finMoveMonth(-1)">‹</button>
@@ -1959,6 +1973,7 @@ function setFinTab(tab){
 function renderDashboard(){
   const ym = ymOf(finPeriod);
   document.getElementById('dashPeriodLbl').textContent = finPeriod.toLocaleDateString('pt-BR',{month:'long', year:'numeric'});
+  document.getElementById('printHeaderPeriod').textContent = finPeriod.toLocaleDateString('pt-BR',{month:'long', year:'numeric'});
 
   const reservasMes = db.reservas.filter(r=>r.data && r.data.startsWith(ym));
   const despesasMes = db.despesas.filter(d=>d.data && d.data.startsWith(ym));
