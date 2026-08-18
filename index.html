@@ -975,6 +975,7 @@ function setupWhatsApp(){
     btn.rel = 'noopener';
   } else {
     btn.href = 'mailto:contato@enterprisepodcaststudio.com.br';
+    btn.textContent = 'Enviar e-mail (WhatsApp em breve)';
     btn.title = 'WhatsApp em breve — por enquanto, fale por e-mail';
   }
 }
@@ -1349,10 +1350,10 @@ function renderKanban(){
       const idx = ETAPAS.indexOf(etapa);
       const prev = idx>0 ? ETAPAS[idx-1] : null;
       const next = ETAPAS[idx+1];
-      return `<div class="kcard">
+      return `<div class="kcard" onclick="openReservaModal('${r.data}','${r.hora}','${r.id}')" style="cursor:pointer;">
         <div class="cli">${cli?cli.nome:'—'}</div>
         <div class="pod">${r.podcast||'Sem título'} · ${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</div>
-        <div class="mv">
+        <div class="mv" onclick="event.stopPropagation()">
           ${prev?`<button class="icon-btn" onclick="moveEtapa('${r.id}','${prev}')">← ${prev}</button>`:''}
           <button class="icon-btn" onclick="moveEtapa('${r.id}','${next}')">${next==='Entregue'?'Entregar ✓':next+' →'}</button>
         </div>
