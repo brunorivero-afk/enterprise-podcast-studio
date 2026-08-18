@@ -722,17 +722,25 @@
           </table></div>
         </div>
 
-        <div class="panel">
+        <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head">
-            <h3>Comissões de indicação (período)</h3>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <label style="margin:0; text-transform:none; font-size:12px; color:var(--text-dim);">% comissão</label>
-              <input type="number" id="comissaoPctInput" step="0.5" style="width:70px;">
-              <button class="icon-btn" onclick="saveComissaoPct()">Salvar</button>
-            </div>
+            <h3>Comissionados</h3>
+            <button class="btn btn-gold" onclick="openComissionadoModal(null)">+ Novo comissionado</button>
           </div>
           <div class="table-scroll"><table>
-            <thead><tr><th>Indicado por</th><th>Reservas pagas</th><th>Base (recebido)</th><th>Comissão</th></tr></thead>
+            <thead><tr><th>Nome</th><th>WhatsApp</th><th>Pix</th><th>%</th><th>Status</th><th></th></tr></thead>
+            <tbody id="comissionadosTbody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Comissões do período</h3>
+            <button class="btn btn-outline" onclick="gerarContasComissao()">💸 Gerar contas a pagar</button>
+          </div>
+          <p class="contact-note" style="margin:0 20px 12px;">Gera (ou atualiza, se ainda não paga) uma conta em "Contas a pagar" por comissionado, na categoria Salários/Comissões.</p>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Comissionado</th><th>%</th><th>Reservas pagas</th><th>Base (recebido)</th><th>Comissão</th></tr></thead>
             <tbody id="finComissoesTbody"></tbody>
           </table></div>
         </div>
@@ -800,6 +808,32 @@
   </div>
 </div>
 
+<!-- MODAL: Comissionado -->
+<div class="modal-bg" id="modalComissionado">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalComissionadoTitle">Novo comissionado</h3>
+      <button onclick="closeModal('modalComissionado')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>Nome</label><input type="text" id="comNome" placeholder="Nome do vendedor"></div>
+        <div class="field"><label>WhatsApp</label><input type="tel" id="comWhats" placeholder="(21) 90000-0000"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Pix</label><input type="text" id="comPix" placeholder="Chave Pix pra repasse"></div>
+        <div class="field"><label>% comissão</label><input type="number" id="comPct" step="0.5" placeholder="10"></div>
+      </div>
+      <label class="check-inline"><input type="checkbox" id="comAtivo" checked> Ativo (aparece pra vincular em novos clientes)</label>
+    </div>
+    <div class="modal-foot">
+      <button class="icon-btn" id="comDeleteBtn" style="display:none;color:var(--red);" onclick="deleteComissionadoCurrent()">Remover</button>
+      <button class="btn btn-outline" onclick="closeModal('modalComissionado')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveComissionado()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Histórico do cliente -->
 <div class="modal-bg" id="modalHistoricoCliente">
   <div class="modal" style="max-width:560px;">
@@ -842,7 +876,7 @@
       </div>
       <div class="field-row">
         <div class="field"><label>Aniversário</label><input type="date" id="cliAniversario"></div>
-        <div class="field"><label>Indicado por</label><input type="text" id="cliIndicadoPor" placeholder="Quem trouxe esse cliente (opcional)"></div>
+        <div class="field"><label>Comissionado (indicação)</label><select id="cliComissionadoId"><option value="">Nenhum</option></select></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -953,12 +987,12 @@ function loadDB(){
     if(raw){
       const parsed = JSON.parse(raw);
       if(!parsed.horarios) parsed.horarios = horariosPadrao();
-      if(!parsed.config) parsed.config = { comissaoPct: 10 };
-      if(parsed.config.comissaoPct === undefined) parsed.config.comissaoPct = 10;
+      if(!parsed.config) parsed.config = {};
+      if(!parsed.comissionados) parsed.comissionados = [];
       return parsed;
     }
   }catch(e){}
-  return { clientes: [], reservas: [], despesas: [], horarios: horariosPadrao(), config: { comissaoPct: 10 } };
+  return { clientes: [], reservas: [], despesas: [], comissionados: [], horarios: horariosPadrao(), config: {} };
 }
 function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
@@ -1015,11 +1049,12 @@ function downloadCSV(filename, csvStr){
   URL.revokeObjectURL(url);
 }
 function exportClientesCSV(){
-  const headers = ['Nome','WhatsApp','Empresa/Podcast','E-mail','Endereço','CPF/CNPJ','Instagram','Aniversário','Indicado por','Gravações','Total gasto'];
+  const headers = ['Nome','WhatsApp','Empresa/Podcast','E-mail','Endereço','CPF/CNPJ','Instagram','Aniversário','Comissionado','Gravações','Total gasto'];
   const rows = db.clientes.map(c=>{
     const reservas = db.reservas.filter(r=>r.clienteId===c.id);
     const total = reservas.reduce((s,r)=>s+(r.valor||0),0);
-    return [c.nome,c.whatsapp,c.empresa,c.email,c.endereco,c.documento,c.instagram,c.aniversario,c.indicadoPor,reservas.length,total.toFixed(2)];
+    const com = c.comissionadoId ? db.comissionados.find(x=>x.id===c.comissionadoId) : null;
+    return [c.nome,c.whatsapp,c.empresa,c.email,c.endereco,c.documento,c.instagram,c.aniversario,com?com.nome:'',reservas.length,total.toFixed(2)];
   });
   downloadCSV(`clientes-${fmtDate(new Date())}.csv`, toCSV(rows,headers));
 }
@@ -1067,7 +1102,8 @@ function importBackup(e){
       if(!Array.isArray(parsed.clientes) || !Array.isArray(parsed.reservas)){ alert('Esse arquivo não parece um backup válido do sistema.'); return; }
       if(!parsed.despesas) parsed.despesas = [];
       if(!parsed.horarios) parsed.horarios = horariosPadrao();
-      if(!parsed.config) parsed.config = { comissaoPct: 10 };
+      if(!parsed.config) parsed.config = {};
+      if(!parsed.comissionados) parsed.comissionados = [];
       db = parsed;
       saveDB();
       alert('Backup importado com sucesso!');
@@ -1460,7 +1496,10 @@ function openClienteModal(id){
   document.getElementById('cliDocumento').value = c?.documento || '';
   document.getElementById('cliInstagram').value = c?.instagram || '';
   document.getElementById('cliAniversario').value = c?.aniversario || '';
-  document.getElementById('cliIndicadoPor').value = c?.indicadoPor || '';
+  const selCom = document.getElementById('cliComissionadoId');
+  const ativos = db.comissionados.filter(x=>x.ativo || x.id===c?.comissionadoId);
+  selCom.innerHTML = '<option value="">Nenhum</option>' + ativos.map(x=>`<option value="${x.id}">${x.nome}${x.ativo?'':' (inativo)'}</option>`).join('');
+  selCom.value = c?.comissionadoId || '';
   document.getElementById('cliDeleteBtn').style.display = c ? 'inline-block' : 'none';
   document.getElementById('modalCliente').classList.add('on');
 }
@@ -1477,7 +1516,7 @@ function saveCliente(){
     documento: document.getElementById('cliDocumento').value.trim(),
     instagram: document.getElementById('cliInstagram').value.trim(),
     aniversario: document.getElementById('cliAniversario').value,
-    indicadoPor: document.getElementById('cliIndicadoPor').value.trim(),
+    comissionadoId: document.getElementById('cliComissionadoId').value,
   };
   if(currentClienteId){
     Object.assign(db.clientes.find(c=>c.id===currentClienteId), data);
@@ -1516,11 +1555,12 @@ function renderClientes(){
   tbody.innerHTML = lista.map(c=>{
     const reservas = db.reservas.filter(r=>r.clienteId===c.id);
     const totalGasto = reservas.reduce((s,r)=>s+(r.valor||0),0);
+    const com = c.comissionadoId ? db.comissionados.find(x=>x.id===c.comissionadoId) : null;
     return `<tr onclick="openClienteModal('${c.id}')" style="cursor:pointer;">
       <td><b>${c.nome}</b></td>
       <td>${c.whatsapp||'—'}</td>
       <td>${c.empresa||'—'}</td>
-      <td>${c.indicadoPor||'—'}</td>
+      <td>${com?com.nome:'—'}</td>
       <td onclick="event.stopPropagation(); verHistoricoCliente('${c.id}')" style="text-decoration:underline; cursor:pointer;" title="Ver histórico">${reservas.length}</td>
       <td class="col-valor">${money(totalGasto)}</td>
       <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openClienteModal('${c.id}')">Editar</button></td>
@@ -1730,31 +1770,114 @@ function renderFinanceiro(){
   document.getElementById('finCategoriasTbody').innerHTML = catRows.length ? catRows.map(([cat,total])=>`
     <tr><td>${cat}</td><td>${money(total)}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="2">Nenhuma despesa neste período.</td></tr>';
 
-  // Comissões de indicação
-  const pctComissao = db.config.comissaoPct || 0;
-  document.getElementById('comissaoPctInput').value = pctComissao;
-  const porIndicador = {};
+  renderComissionados();
+
+  // Comissões do período, por comissionado (cada um com sua própria %)
+  const porComissionado = {};
   reservasMes.filter(r=>r.pagamento==='pago').forEach(r=>{
     const cli = db.clientes.find(c=>c.id===r.clienteId);
-    const ind = cli && cli.indicadoPor ? cli.indicadoPor.trim() : '';
-    if(!ind) return;
-    if(!porIndicador[ind]) porIndicador[ind] = {count:0, total:0};
-    porIndicador[ind].count++;
-    porIndicador[ind].total += (r.valor||0);
+    if(!cli || !cli.comissionadoId) return;
+    const com = db.comissionados.find(x=>x.id===cli.comissionadoId);
+    if(!com) return;
+    if(!porComissionado[com.id]) porComissionado[com.id] = {com, count:0, total:0};
+    porComissionado[com.id].count++;
+    porComissionado[com.id].total += (r.valor||0);
   });
-  const comissaoRows = Object.entries(porIndicador);
-  document.getElementById('finComissoesTbody').innerHTML = comissaoRows.length ? comissaoRows.map(([ind,v])=>`
-    <tr><td>${ind}</td><td>${v.count}</td><td>${money(v.total)}</td><td class="col-valor" style="color:var(--gold); font-weight:700;">${money(v.total*pctComissao/100)}</td></tr>
-  `).join('') : '<tr class="empty-row"><td colspan="4">Nenhuma reserva paga de cliente indicado neste período.</td></tr>';
+  const comissaoRows = Object.values(porComissionado);
+  document.getElementById('finComissoesTbody').innerHTML = comissaoRows.length ? comissaoRows.map(v=>`
+    <tr><td>${v.com.nome}</td><td>${v.com.pct||0}%</td><td>${v.count}</td><td>${money(v.total)}</td><td class="col-valor" style="color:var(--gold); font-weight:700;">${money(v.total*(v.com.pct||0)/100)}</td></tr>
+  `).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma reserva paga de cliente com comissionado neste período.</td></tr>';
 
   renderRankingClientes();
 }
 
-function saveComissaoPct(){
-  db.config.comissaoPct = Number(document.getElementById('comissaoPctInput').value) || 0;
+/* ---------- Comissionados ---------- */
+let currentComissionadoId = null;
+function openComissionadoModal(id){
+  currentComissionadoId = id;
+  const c = id ? db.comissionados.find(x=>x.id===id) : null;
+  document.getElementById('modalComissionadoTitle').textContent = c ? 'Editar comissionado' : 'Novo comissionado';
+  document.getElementById('comNome').value = c?.nome || '';
+  document.getElementById('comWhats').value = c?.whatsapp || '';
+  document.getElementById('comPix').value = c?.pix || '';
+  document.getElementById('comPct').value = c ? c.pct : '';
+  document.getElementById('comAtivo').checked = c ? !!c.ativo : true;
+  document.getElementById('comDeleteBtn').style.display = c ? 'inline-block' : 'none';
+  document.getElementById('modalComissionado').classList.add('on');
+}
+function saveComissionado(){
+  const nome = document.getElementById('comNome').value.trim();
+  if(!nome){ alert('Informe o nome do comissionado.'); return; }
+  const data = {
+    nome,
+    whatsapp: document.getElementById('comWhats').value.trim(),
+    pix: document.getElementById('comPix').value.trim(),
+    pct: Number(document.getElementById('comPct').value) || 0,
+    ativo: document.getElementById('comAtivo').checked,
+  };
+  if(currentComissionadoId){
+    Object.assign(db.comissionados.find(x=>x.id===currentComissionadoId), data);
+  } else {
+    db.comissionados.push(Object.assign({id:uid(), criadoEm:new Date().toISOString()}, data));
+  }
   saveDB();
+  closeModal('modalComissionado');
   renderFinanceiro();
 }
+function deleteComissionadoCurrent(){
+  if(!currentComissionadoId) return;
+  const emUso = db.clientes.some(c=>c.comissionadoId===currentComissionadoId);
+  if(emUso && !confirm('Esse comissionado está vinculado a cliente(s). Remover mesmo assim? Os clientes ficam sem comissionado.')) return;
+  db.comissionados = db.comissionados.filter(x=>x.id!==currentComissionadoId);
+  db.clientes.forEach(c=>{ if(c.comissionadoId===currentComissionadoId) c.comissionadoId = ''; });
+  saveDB();
+  closeModal('modalComissionado');
+  renderFinanceiro();
+}
+function renderComissionados(){
+  const tbody = document.getElementById('comissionadosTbody');
+  tbody.innerHTML = db.comissionados.length ? db.comissionados.map(c=>`
+    <tr onclick="openComissionadoModal('${c.id}')" style="cursor:pointer;">
+      <td><b>${c.nome}</b></td>
+      <td>${c.whatsapp||'—'}</td>
+      <td>${c.pix||'—'}</td>
+      <td>${c.pct||0}%</td>
+      <td><span class="badge ${c.ativo?'green':'gray'}">${c.ativo?'Ativo':'Inativo'}</span></td>
+      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openComissionadoModal('${c.id}')">Editar</button></td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="6">Nenhum comissionado cadastrado ainda.</td></tr>';
+}
+
+function gerarContasComissao(){
+  const ym = ymOf(finPeriod);
+  const reservasMes = db.reservas.filter(r=>r.data && r.data.startsWith(ym) && r.pagamento==='pago');
+  const porComissionado = {};
+  reservasMes.forEach(r=>{
+    const cli = db.clientes.find(c=>c.id===r.clienteId);
+    if(!cli || !cli.comissionadoId) return;
+    const com = db.comissionados.find(x=>x.id===cli.comissionadoId);
+    if(!com) return;
+    porComissionado[com.id] = (porComissionado[com.id]||0) + (r.valor||0)*(com.pct||0)/100;
+  });
+  const entradas = Object.entries(porComissionado).filter(([,v])=>v>0);
+  if(!entradas.length){ alert('Nenhuma comissão a gerar neste período.'); return; }
+  let criadas = 0, atualizadas = 0, jaPagas = 0;
+  entradas.forEach(([comId,valor])=>{
+    const com = db.comissionados.find(x=>x.id===comId);
+    const desc = `Comissão — ${com.nome} (${ym})`;
+    const existente = db.despesas.find(d=>d.descricao===desc && d.categoria==='Salários/Comissões');
+    if(existente){
+      if(existente.pago){ jaPagas++; }
+      else { existente.valor = valor; atualizadas++; }
+    } else {
+      db.despesas.push({id:uid(), descricao:desc, valor, data: fmtDate(new Date()), categoria:'Salários/Comissões', recorrente:false, pago:false, comissionadoId:comId});
+      criadas++;
+    }
+  });
+  saveDB();
+  renderFinanceiro();
+  alert(`${criadas} conta(s) criada(s), ${atualizadas} atualizada(s)${jaPagas?`, ${jaPagas} já estava(m) paga(s) (não mexi)`:''}. Veja em "Contas a pagar".`);
+}
+
 
 function saveMetaFaturamento(){
   db.config.metaFaturamento = Number(document.getElementById('metaFaturamentoInput').value) || 0;
