@@ -264,9 +264,17 @@
 
   .icon-btn{background:var(--card2); border:1px solid var(--border2); border-radius:7px; padding:7px 10px; font-size:12px; color:var(--text-dim);}
   .icon-btn:hover{border-color:var(--gold); color:var(--gold);}
+  .role-operador .col-valor{display:none;}
+
+  .check-inline{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); font-weight:600; text-transform:none; letter-spacing:0;}
+  .check-inline input{width:auto;}
+  .pix-box{margin-top:10px; background:var(--card2); border:1px solid var(--border2); border-radius:10px; padding:14px 16px;}
+  .pix-box .row{display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--text-dim); padding:5px 0;}
+  .pix-box .row b{color:var(--gold); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.04em;}
 
   /* Agenda */
   .agenda-toolbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap;}
+  .fin-period-bar{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap;}
   .day-nav{display:flex; align-items:center; gap:10px;}
   .day-nav .date-lbl{font-size:14.5px; font-weight:700; min-width:190px; text-align:center;}
   .slot-grid{display:flex; flex-direction:column; gap:8px;}
@@ -343,7 +351,7 @@
       </nav>
       <div class="header-actions" style="display:flex; align-items:center; gap:10px;">
         <a href="#contato" class="btn btn-gold">Agendar Horário</a>
-        <button class="btn-ghost" onclick="openApp()" style="border:1px solid var(--border2); padding:11px 16px; border-radius:8px;">Área da Equipe</button>
+        <button class="btn-ghost" onclick="requestAppAccess()" style="border:1px solid var(--border2); padding:11px 16px; border-radius:8px;">Área da Equipe</button>
         <button class="nav-toggle" id="navToggle" aria-label="Abrir menu" onclick="toggleMobileMenu()">☰</button>
       </div>
     </div>
@@ -353,7 +361,7 @@
       <a href="#servicos" onclick="closeMobileMenu()">Serviços</a>
       <a href="#camila" onclick="closeMobileMenu()">Camila Rodrigues</a>
       <a href="#contato" onclick="closeMobileMenu()">Contato</a>
-      <button onclick="closeMobileMenu(); openApp();">Área da Equipe</button>
+      <button onclick="closeMobileMenu(); requestAppAccess();">Área da Equipe</button>
     </div>
   </header>
 
@@ -486,7 +494,7 @@
     </div>
     <div class="footer-bottom">
       <span>© 2026 Enterprise Podcast Studio. Todos os direitos reservados.</span>
-      <button class="btn-ghost" onclick="openApp()" style="background:none;border:none;">Área da Equipe →</button>
+      <button class="btn-ghost" onclick="requestAppAccess()" style="background:none;border:none;">Área da Equipe →</button>
     </div>
   </footer>
 </div>
@@ -503,6 +511,8 @@
     <button class="nav-item" data-view="producao"><span class="ic">🎬</span> Produção</button>
     <button class="nav-item" data-view="financeiro"><span class="ic">💰</span> Financeiro</button>
     <div class="side-bottom">
+      <div style="padding:6px 12px 10px; font-size:11px; color:var(--text-faint);">Conectado como <b id="currentRoleLbl" style="color:var(--text-dim);">—</b></div>
+      <button class="nav-item" onclick="logoutRole()"><span class="ic">🔒</span> Trocar de usuário</button>
       <button class="nav-item" onclick="closeApp()"><span class="ic">↩</span> Voltar ao site</button>
     </div>
   </aside>
@@ -554,7 +564,7 @@
         <div class="panel">
           <div class="panel-head"><h3>Todos os clientes</h3></div>
           <table>
-            <thead><tr><th>Nome</th><th>WhatsApp</th><th>Empresa/Podcast</th><th>Gravações</th><th>Total gasto</th><th></th></tr></thead>
+            <thead><tr><th>Nome</th><th>WhatsApp</th><th>Empresa/Podcast</th><th>Gravações</th><th class="col-valor">Total gasto</th><th></th></tr></thead>
             <tbody id="clientesTbody"></tbody>
           </table>
         </div>
@@ -567,38 +577,108 @@
 
       <!-- FINANCEIRO -->
       <div class="view-panel" id="view-financeiro">
-        <div class="stat-row">
-          <div class="stat-card"><div class="lbl">Recebido no mês</div><div class="val green" id="finRecebido">R$ 0,00</div></div>
-          <div class="stat-card"><div class="lbl">A receber</div><div class="val gold" id="finAReceber">R$ 0,00</div></div>
-          <div class="stat-card"><div class="lbl">Despesas do mês</div><div class="val red" id="finDespesas">R$ 0,00</div></div>
-          <div class="stat-card"><div class="lbl">Lucro líquido</div><div class="val" id="finLucro">R$ 0,00</div></div>
+        <div class="fin-period-bar">
+          <div class="day-nav">
+            <button class="icon-btn" onclick="finMoveMonth(-1)">‹</button>
+            <div class="date-lbl" id="finPeriodLbl"></div>
+            <button class="icon-btn" onclick="finMoveMonth(1)">›</button>
+          </div>
+          <button class="btn btn-outline" onclick="finThisMonth()">Mês atual</button>
         </div>
-        <div class="panel" style="margin-bottom:20px;">
-          <div class="panel-head"><h3>Nova despesa</h3></div>
-          <div class="panel-body">
-            <div class="field-row">
-              <div class="field"><label>Descrição</label><input type="text" id="despDesc" placeholder="Ex: Conta de luz"></div>
-              <div class="field"><label>Valor (R$)</label><input type="number" id="despValor" placeholder="0,00" step="0.01"></div>
-            </div>
-            <div class="field"><label>Data</label><input type="date" id="despData"></div>
-            <button class="btn btn-gold" onclick="addDespesa()">+ Adicionar despesa</button>
+        <div class="stat-row">
+          <div class="stat-card"><div class="lbl">Recebido no período</div><div class="val green" id="finRecebido">R$ 0,00</div></div>
+          <div class="stat-card"><div class="lbl">A receber</div><div class="val gold" id="finAReceber">R$ 0,00</div></div>
+          <div class="stat-card"><div class="lbl">Despesas do período</div><div class="val red" id="finDespesas">R$ 0,00</div></div>
+          <div class="stat-card">
+            <div class="lbl">Lucro líquido</div>
+            <div class="val" id="finLucro">R$ 0,00</div>
+            <div class="hint" id="finLucroComp">vs. mês anterior</div>
           </div>
         </div>
-        <div class="panel">
-          <div class="panel-head"><h3>Reservas do mês (recebido / a receber)</h3></div>
+
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head"><h3>Nova conta / despesa</h3></div>
+          <div class="panel-body">
+            <div class="field-row">
+              <div class="field"><label>Descrição</label><input type="text" id="despDesc" placeholder="Ex: Aluguel da sala"></div>
+              <div class="field"><label>Valor (R$)</label><input type="number" id="despValor" placeholder="0,00" step="0.01"></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Vencimento</label><input type="date" id="despData"></div>
+              <div class="field">
+                <label>Categoria</label>
+                <select id="despCategoria">
+                  <option value="Aluguel">Aluguel</option>
+                  <option value="Equipamento">Equipamento</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Manutenção">Manutenção</option>
+                  <option value="Salários/Comissões">Salários/Comissões</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </div>
+            </div>
+            <label class="check-inline"><input type="checkbox" id="despRecorrente"> Despesa recorrente (repete todo mês)</label>
+            <button class="btn btn-gold" style="margin-top:14px;" onclick="addDespesa()">+ Adicionar</button>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head"><h3>Reservas do período (recebido / a receber)</h3></div>
           <table>
             <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Forma</th><th>Status</th></tr></thead>
             <tbody id="finReservasTbody"></tbody>
           </table>
         </div>
-        <div class="panel" style="margin-top:20px;">
-          <div class="panel-head"><h3>Despesas do mês</h3></div>
+
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head"><h3>Contas a pagar</h3></div>
           <table>
-            <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th></th></tr></thead>
-            <tbody id="finDespesasTbody"></tbody>
+            <thead><tr><th>Vencimento</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
+            <tbody id="finAPagarTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head"><h3>Despesas pagas no período</h3></div>
+          <table>
+            <thead><tr><th>Vencimento</th><th>Descrição</th><th>Categoria</th><th>Valor</th><th></th></tr></thead>
+            <tbody id="finPagasTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Despesas por categoria (período)</h3></div>
+          <table>
+            <thead><tr><th>Categoria</th><th>Total</th></tr></thead>
+            <tbody id="finCategoriasTbody"></tbody>
           </table>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Login da Área da Equipe -->
+<div class="modal-bg" id="modalLogin">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Entrar na Área da Equipe</h3>
+      <button onclick="closeModal('modalLogin')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Perfil</label>
+        <select id="loginRole">
+          <option value="admin">Administrador — acesso completo</option>
+          <option value="operador">Operador — Agenda, Clientes e Produção</option>
+        </select>
+      </div>
+      <div class="field"><label>PIN</label><input type="password" id="loginPin" placeholder="••••" inputmode="numeric" maxlength="6"></div>
+      <p class="contact-note">Proteção simples, local neste navegador — só pra separar quem enxerga o Financeiro. Segurança de verdade chega junto com o Supabase.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalLogin')">Cancelar</button>
+      <button class="btn btn-gold" onclick="submitLogin()">Entrar</button>
     </div>
   </div>
 </div>
@@ -638,6 +718,16 @@
           <option value="Transferência">Transferência</option>
         </select>
       </div>
+      <div class="field">
+        <button type="button" class="btn btn-outline" style="width:100%;" onclick="togglePixInfo()">📲 Gerar cobrança Pix</button>
+        <div id="pixInfoBox" class="pix-box" style="display:none;">
+          <div class="row"><b>Chave Pix</b><span id="pixKeyDisplay">—</span></div>
+          <div class="row"><b>Favorecido</b><span id="pixNomeDisplay">—</span></div>
+          <div class="row"><b>Valor</b><span id="pixValorDisplay">—</span></div>
+          <button type="button" class="icon-btn" style="margin-top:8px;" onclick="copyPixKey()">Copiar chave Pix</button>
+          <p class="contact-note" style="margin-top:10px;">Envie esses dados pro cliente e marque o status como "Pago" assim que o Pix cair na conta.</p>
+        </div>
+      </div>
       <div class="field"><label>Observação</label><textarea id="resObs" rows="2" placeholder="Detalhes da gravação..."></textarea></div>
     </div>
     <div class="modal-foot">
@@ -672,12 +762,49 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 function openApp(){
   document.getElementById('site').style.display = 'none';
   document.getElementById('app').classList.add('on');
+  applyRolePermissions();
   renderAll();
 }
 function closeApp(){
   document.getElementById('app').classList.remove('on');
   document.getElementById('site').style.display = 'block';
   window.scrollTo(0,0);
+}
+
+/* ---------- Login / níveis de acesso ----------
+   Proteção simples e local (sem backend ainda): separa Administrador
+   (vê tudo, inclusive Financeiro) de Operador (Agenda, Clientes e
+   Produção, sem valores agregados). Trocar os PINs abaixo à vontade;
+   quando o Supabase Auth entrar, isso vira login de verdade. */
+const ROLE_PINS = { admin: '1234', operador: '0000' };
+const ROLE_LABELS = { admin: 'Administrador', operador: 'Operador' };
+
+function requestAppAccess(){
+  if(sessionStorage.getItem('eps_role')){ openApp(); return; }
+  document.getElementById('modalLogin').classList.add('on');
+}
+function submitLogin(){
+  const role = document.getElementById('loginRole').value;
+  const pin = document.getElementById('loginPin').value;
+  if(pin !== ROLE_PINS[role]){ alert('PIN incorreto.'); return; }
+  sessionStorage.setItem('eps_role', role);
+  document.getElementById('loginPin').value = '';
+  closeModal('modalLogin');
+  openApp();
+}
+function logoutRole(){
+  sessionStorage.removeItem('eps_role');
+  closeApp();
+}
+function applyRolePermissions(){
+  const role = sessionStorage.getItem('eps_role') || 'operador';
+  const isAdmin = role === 'admin';
+  document.getElementById('currentRoleLbl').textContent = ROLE_LABELS[role];
+  document.querySelector('.nav-item[data-view="financeiro"]').style.display = isAdmin ? '' : 'none';
+  document.body.classList.toggle('role-operador', !isAdmin);
+  if(!isAdmin && document.getElementById('view-financeiro').classList.contains('on')){
+    activateView('clientes');
+  }
 }
 
 /* ---------- Menu mobile (site público) ---------- */
@@ -715,24 +842,48 @@ function setupWhatsApp(){
 }
 document.addEventListener('DOMContentLoaded', setupWhatsApp);
 
+/* ---------- Pix assistido ----------
+   Preencher a chave Pix oficial do estúdio assim que vocês tiverem.
+   Sem gateway integrado por enquanto: a equipe mostra a chave, o
+   cliente paga, e o status é marcado como "Pago" manualmente aqui
+   no sistema. Quando o Supabase + gateway entrarem, isso vira
+   confirmação automática. */
+const PIX_KEY = '';
+const PIX_NOME = 'Enterprise Podcast Studio';
+
+function togglePixInfo(){
+  const box = document.getElementById('pixInfoBox');
+  const show = box.style.display === 'none';
+  box.style.display = show ? 'block' : 'none';
+  if(show){
+    document.getElementById('pixKeyDisplay').textContent = PIX_KEY || 'Ainda não configurada';
+    document.getElementById('pixNomeDisplay').textContent = PIX_NOME;
+    const valor = Number(document.getElementById('resValor').value) || 0;
+    document.getElementById('pixValorDisplay').textContent = money(valor);
+  }
+}
+function copyPixKey(){
+  if(!PIX_KEY){ alert('A chave Pix ainda não foi configurada no sistema.'); return; }
+  navigator.clipboard.writeText(PIX_KEY).then(()=>alert('Chave Pix copiada!'));
+}
+
+function activateView(v){
+  document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('view-'+v).classList.add('on');
+  const titles = {agenda:['Agenda','Sala única — clique num horário livre para reservar'],
+    clientes:['Clientes','Cadastro e histórico de gravações'],
+    producao:['Produção','Acompanhamento do fluxo de cada episódio'],
+    financeiro:['Financeiro','Recebido, a receber, despesas e lucro do período']};
+  document.getElementById('topTitle').textContent = titles[v][0];
+  document.getElementById('topSub').textContent = titles[v][1];
+  toggleSide(false);
+  if(v==='clientes') renderClientes();
+  if(v==='producao') renderKanban();
+  if(v==='financeiro') renderFinanceiro();
+}
 document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const v = btn.dataset.view;
-    document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('on'));
-    document.getElementById('view-'+v).classList.add('on');
-    const titles = {agenda:['Agenda','Sala única — clique num horário livre para reservar'],
-      clientes:['Clientes','Cadastro e histórico de gravações'],
-      producao:['Produção','Acompanhamento do fluxo de cada episódio'],
-      financeiro:['Financeiro','Recebido, a receber, despesas e lucro do mês']};
-    document.getElementById('topTitle').textContent = titles[v][0];
-    document.getElementById('topSub').textContent = titles[v][1];
-    toggleSide(false);
-    if(v==='clientes') renderClientes();
-    if(v==='producao') renderKanban();
-    if(v==='financeiro') renderFinanceiro();
-  });
+  btn.addEventListener('click', ()=>activateView(btn.dataset.view));
 });
 
 function closeModal(id){ document.getElementById(id).classList.remove('on'); }
@@ -807,6 +958,7 @@ function openReservaModal(dateStr, hora, reservaId){
     document.getElementById('resObs').value = '';
     document.getElementById('resDeleteBtn').style.display = 'none';
   }
+  document.getElementById('pixInfoBox').style.display = 'none';
   document.getElementById('modalReserva').dataset.date = dateStr;
   document.getElementById('modalReserva').classList.add('on');
 }
@@ -885,7 +1037,7 @@ function renderClientes(){
       <td>${c.whatsapp||'—'}</td>
       <td>${c.empresa||'—'}</td>
       <td>${reservas.length}</td>
-      <td>${money(totalGasto)}</td>
+      <td class="col-valor">${money(totalGasto)}</td>
       <td><button class="icon-btn" onclick="deleteCliente('${c.id}')">Remover</button></td>
     </tr>`;
   }).join('');
@@ -923,16 +1075,25 @@ function moveEtapa(reservaId, novaEtapa){
 }
 
 /* ---------- FINANCEIRO ---------- */
+let finPeriod = new Date(); // mês em exibição no Financeiro
+
+function ymOf(d){ return d.toISOString().slice(0,7); }
+function finMoveMonth(delta){ finPeriod.setMonth(finPeriod.getMonth()+delta); renderFinanceiro(); }
+function finThisMonth(){ finPeriod = new Date(); renderFinanceiro(); }
+
 function addDespesa(){
   const desc = document.getElementById('despDesc').value.trim();
   const valor = Number(document.getElementById('despValor').value);
   const data = document.getElementById('despData').value || fmtDate(new Date());
+  const categoria = document.getElementById('despCategoria').value;
+  const recorrente = document.getElementById('despRecorrente').checked;
   if(!desc || !valor){ alert('Preencha descrição e valor.'); return; }
-  db.despesas.push({id:uid(), descricao:desc, valor, data});
+  db.despesas.push({id:uid(), descricao:desc, valor, data, categoria, recorrente, pago:false});
   saveDB();
   document.getElementById('despDesc').value='';
   document.getElementById('despValor').value='';
   document.getElementById('despData').value='';
+  document.getElementById('despRecorrente').checked=false;
   renderFinanceiro();
 }
 function deleteDespesa(id){
@@ -940,16 +1101,31 @@ function deleteDespesa(id){
   saveDB();
   renderFinanceiro();
 }
+function pagarDespesa(id){
+  const d = db.despesas.find(x=>x.id===id);
+  if(!d) return;
+  d.pago = true;
+  if(d.recorrente){
+    const prox = new Date(d.data+'T00:00:00');
+    prox.setMonth(prox.getMonth()+1);
+    db.despesas.push({id:uid(), descricao:d.descricao, valor:d.valor, data:fmtDate(prox), categoria:d.categoria, recorrente:true, pago:false});
+  }
+  saveDB();
+  renderFinanceiro();
+}
 
 function renderFinanceiro(){
-  const now = new Date();
-  const ym = now.toISOString().slice(0,7);
+  const ym = ymOf(finPeriod);
+  document.getElementById('finPeriodLbl').textContent = finPeriod.toLocaleDateString('pt-BR',{month:'long', year:'numeric'});
+
   const reservasMes = db.reservas.filter(r=>r.data && r.data.startsWith(ym));
   const despesasMes = db.despesas.filter(d=>d.data && d.data.startsWith(ym));
+  const pagasMes = despesasMes.filter(d=>d.pago);
+  const aPagarMes = despesasMes.filter(d=>!d.pago);
 
   const recebido = reservasMes.filter(r=>r.pagamento==='pago').reduce((s,r)=>s+(r.valor||0),0);
   const aReceber = reservasMes.filter(r=>r.pagamento!=='pago').reduce((s,r)=>s+(r.valor||0),0);
-  const despesasTotal = despesasMes.reduce((s,d)=>s+(d.valor||0),0);
+  const despesasTotal = pagasMes.reduce((s,d)=>s+(d.valor||0),0);
   const lucro = recebido - despesasTotal;
 
   document.getElementById('finRecebido').textContent = money(recebido);
@@ -958,6 +1134,21 @@ function renderFinanceiro(){
   const lucroEl = document.getElementById('finLucro');
   lucroEl.textContent = money(lucro);
   lucroEl.className = 'val ' + (lucro>=0?'green':'red');
+
+  // comparação com o mês anterior
+  const prevDate = new Date(finPeriod); prevDate.setMonth(prevDate.getMonth()-1);
+  const ymPrev = ymOf(prevDate);
+  const reservasPrev = db.reservas.filter(r=>r.data && r.data.startsWith(ymPrev) && r.pagamento==='pago').reduce((s,r)=>s+(r.valor||0),0);
+  const despesasPrev = db.despesas.filter(d=>d.data && d.data.startsWith(ymPrev) && d.pago).reduce((s,d)=>s+(d.valor||0),0);
+  const lucroPrev = reservasPrev - despesasPrev;
+  const compEl = document.getElementById('finLucroComp');
+  if(lucroPrev === 0){
+    compEl.textContent = 'sem dados do mês anterior';
+  } else {
+    const delta = ((lucro - lucroPrev) / Math.abs(lucroPrev)) * 100;
+    compEl.textContent = (delta>=0?'▲ ':'▼ ') + Math.abs(delta).toFixed(0) + '% vs. mês anterior';
+    compEl.style.color = delta>=0 ? 'var(--green)' : 'var(--red)';
+  }
 
   const tbody = document.getElementById('finReservasTbody');
   tbody.innerHTML = reservasMes.length ? reservasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
@@ -970,16 +1161,33 @@ function renderFinanceiro(){
       <td>${r.formaPagamento||'—'}</td>
       <td><span class="badge ${r.pagamento==='pago'?'green':'amber'}">${r.pagamento==='pago'?'Pago':'A receber'}</span></td>
     </tr>`;
-  }).join('') : '<tr class="empty-row"><td colspan="6">Nenhuma reserva este mês.</td></tr>';
+  }).join('') : '<tr class="empty-row"><td colspan="6">Nenhuma reserva neste período.</td></tr>';
 
-  const tbodyD = document.getElementById('finDespesasTbody');
-  tbodyD.innerHTML = despesasMes.length ? despesasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(d=>`
+  const tbodyAPagar = document.getElementById('finAPagarTbody');
+  tbodyAPagar.innerHTML = aPagarMes.length ? aPagarMes.sort((a,b)=>a.data.localeCompare(b.data)).map(d=>`
+    <tr>
+      <td>${new Date(d.data+'T00:00:00').toLocaleDateString('pt-BR')}${d.recorrente?' <span class="badge blue">recorrente</span>':''}</td>
+      <td>${d.descricao}</td>
+      <td>${d.categoria||'Outros'}</td>
+      <td>${money(d.valor)}</td>
+      <td style="display:flex; gap:6px;"><button class="icon-btn" onclick="pagarDespesa('${d.id}')">Marcar paga</button><button class="icon-btn" onclick="deleteDespesa('${d.id}')">Remover</button></td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma conta a pagar neste período.</td></tr>';
+
+  const tbodyPagas = document.getElementById('finPagasTbody');
+  tbodyPagas.innerHTML = pagasMes.length ? pagasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(d=>`
     <tr>
       <td>${new Date(d.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
       <td>${d.descricao}</td>
+      <td>${d.categoria||'Outros'}</td>
       <td>${money(d.valor)}</td>
       <td><button class="icon-btn" onclick="deleteDespesa('${d.id}')">Remover</button></td>
-    </tr>`).join('') : '<tr class="empty-row"><td colspan="4">Nenhuma despesa este mês.</td></tr>';
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma despesa paga neste período.</td></tr>';
+
+  const porCategoria = {};
+  despesasMes.forEach(d=>{ const c=d.categoria||'Outros'; porCategoria[c]=(porCategoria[c]||0)+(d.valor||0); });
+  const catRows = Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('finCategoriasTbody').innerHTML = catRows.length ? catRows.map(([cat,total])=>`
+    <tr><td>${cat}</td><td>${money(total)}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="2">Nenhuma despesa neste período.</td></tr>';
 }
 
 function renderAll(){
