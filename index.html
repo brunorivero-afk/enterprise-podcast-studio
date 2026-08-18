@@ -267,6 +267,8 @@
   .icon-btn:hover{border-color:var(--gold); color:var(--gold);}
   .role-operador .col-valor{display:none;}
 
+  .meta-bar-track{width:100%; height:14px; border-radius:8px; background:var(--card2); border:1px solid var(--border2); overflow:hidden;}
+  .meta-bar-fill{height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); border-radius:8px 0 0 8px; transition:width .3s; width:0%;}
   .check-inline{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); font-weight:600; text-transform:none; letter-spacing:0;}
   .check-inline input{width:auto;}
   .extra-add-row{display:flex; gap:6px; margin-bottom:8px;}
@@ -287,23 +289,20 @@
   .seg-btn{padding:7px 14px; font-size:12.5px; font-weight:700; color:var(--text-dim); border-radius:6px;}
   .seg-btn.active{background:var(--gold-bg); color:var(--gold);}
 
-  .week-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:10px; overflow-x:auto;}
-  .week-day{background:var(--card); border:1px solid var(--border); border-radius:12px; min-width:130px; overflow:hidden;}
-  .week-day-head{padding:10px 12px; border-bottom:1px solid var(--border); text-align:center;}
-  .week-day-head .dow{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--gold);}
-  .week-day-head .dnum{font-size:15px; font-weight:800; margin-top:2px;}
-  .week-day.is-today .week-day-head{background:var(--gold-bg);}
-  .week-slot{padding:9px 10px; font-size:11.5px; border-bottom:1px solid var(--border); cursor:pointer; color:var(--text-faint);}
-  .week-slot:last-child{border-bottom:none;}
-  .week-slot:hover{background:var(--card2);}
-  .week-slot.busy{color:var(--text); background:rgba(212,175,55,.06); cursor:default;}
-  .week-slot.busy:hover{background:rgba(212,175,55,.06);}
-  .week-slot .cli{font-weight:700; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .week-empty{padding:14px 10px; text-align:center; font-size:11px; color:var(--text-faint);}
+  .week-cal{display:grid; grid-template-columns:52px repeat(7,minmax(84px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:12px; overflow:auto; max-height:70vh;}
+  .week-cal-cell-head{background:var(--panel); position:sticky; left:0; top:0; z-index:3;}
+  .week-cal-head{background:var(--panel); text-align:center; font-size:10.5px; font-weight:800; padding:10px 4px; line-height:1.5; position:sticky; top:0; z-index:2; text-transform:uppercase; color:var(--text-dim);}
+  .week-cal-head.is-today{background:var(--gold-bg); color:var(--gold);}
+  .week-cal-time{background:var(--panel); font-size:10.5px; font-weight:700; color:var(--text-faint); text-align:center; padding:8px 2px; position:sticky; left:0; z-index:1; white-space:nowrap;}
+  .week-cal-cell{background:var(--card); text-align:center; padding:8px 4px; font-size:10.5px; color:var(--text-faint); cursor:pointer; min-height:36px; display:flex; align-items:center; justify-content:center;}
+  .week-cal-cell:hover{background:var(--card2);}
+  .week-cal-cell.busy{background:rgba(212,175,55,.14); color:var(--gold); font-weight:700;}
+  .week-cal-cell.busy:hover{background:rgba(212,175,55,.2);}
+  .week-cal-cell.off{background:var(--bg); color:var(--text-faint); cursor:default; opacity:.4;}
+  .week-empty{padding:14px 10px; text-align:center; font-size:11px; color:var(--text-faint); grid-column:1/-1; background:var(--card);}
 
   .horarios-day{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
   .horarios-day label{min-width:80px; margin:0; text-transform:none; font-size:13px; color:var(--text);}
-  @media(max-width:600px){ .week-grid{grid-template-columns:repeat(7, minmax(120px,1fr));} }
   .day-nav{display:flex; align-items:center; gap:10px;}
   .day-nav .date-lbl{font-size:14.5px; font-weight:700; min-width:190px; text-align:center;}
   .slot-grid{display:flex; flex-direction:column; gap:8px;}
@@ -583,7 +582,7 @@
             <div class="slot-grid" id="slotGrid"></div>
           </div>
         </div>
-        <div class="week-grid" id="weekGrid" style="display:none;"></div>
+        <div class="week-cal" id="weekGrid" style="display:none;"></div>
       </div>
 
       <!-- CLIENTES -->
@@ -591,7 +590,11 @@
         <div class="panel">
           <div class="panel-head">
             <h3>Todos os clientes</h3>
-            <button class="btn btn-gold" onclick="openClienteModal(null)">+ Novo cliente</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <input type="text" id="clienteBusca" placeholder="🔎 Buscar nome, empresa ou WhatsApp..." style="width:220px;" oninput="renderClientes()">
+              <button class="btn btn-outline" onclick="exportClientesCSV()">⬇️ CSV</button>
+              <button class="btn btn-gold" onclick="openClienteModal(null)">+ Novo cliente</button>
+            </div>
           </div>
           <div class="table-scroll"><table>
             <thead><tr><th>Nome</th><th>WhatsApp</th><th>Empresa/Podcast</th><th>Indicado por</th><th>Gravações</th><th class="col-valor">Total gasto</th><th></th></tr></thead>
@@ -621,7 +624,10 @@
             <div class="date-lbl" id="finPeriodLbl"></div>
             <button class="icon-btn" onclick="finMoveMonth(1)">›</button>
           </div>
-          <button class="btn btn-outline" onclick="finThisMonth()">Mês atual</button>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline" onclick="finThisMonth()">Mês atual</button>
+            <button class="btn btn-outline" onclick="exportFinanceiroCSV()">⬇️ CSV do período</button>
+          </div>
         </div>
         <div class="stat-row">
           <div class="stat-card"><div class="lbl">Recebido no período</div><div class="val green" id="finRecebido">R$ 0,00</div></div>
@@ -632,6 +638,26 @@
             <div class="lbl">Lucro líquido</div>
             <div class="val" id="finLucro">R$ 0,00</div>
             <div class="hint" id="finLucroComp">vs. mês anterior</div>
+          </div>
+          <div class="stat-card">
+            <div class="lbl">Ocupação da sala</div>
+            <div class="val gold" id="finOcupacao">0%</div>
+            <div class="hint" id="finOcupacaoQtd"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head">
+            <h3>Meta de faturamento do mês</h3>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label style="margin:0; text-transform:none; font-size:12px; color:var(--text-dim);">Meta (R$)</label>
+              <input type="number" id="metaFaturamentoInput" step="100" style="width:110px;">
+              <button class="icon-btn" onclick="saveMetaFaturamento()">Salvar</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="meta-bar-track"><div class="meta-bar-fill" id="metaBarFill"></div></div>
+            <div class="hint" id="metaBarLabel" style="margin-top:8px;"></div>
           </div>
         </div>
 
@@ -709,6 +735,22 @@
             <tbody id="finComissoesTbody"></tbody>
           </table></div>
         </div>
+
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head"><h3>🏆 Clientes que mais gastam (histórico completo)</h3></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Cliente</th><th>Gravações</th><th>Ticket médio</th><th class="col-valor">Total gasto</th></tr></thead>
+            <tbody id="finRankingTbody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>⏳ Clientes sem gravação há mais de 60 dias</h3></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Cliente</th><th>Última gravação</th><th>Há quanto tempo</th></tr></thead>
+            <tbody id="finInativosTbody"></tbody>
+          </table></div>
+        </div>
       </div>
     </div>
   </div>
@@ -753,6 +795,25 @@
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModal('modalHorarios')">Cancelar</button>
       <button class="btn btn-gold" onclick="saveHorarios()">Salvar horários</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Histórico do cliente -->
+<div class="modal-bg" id="modalHistoricoCliente">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-head">
+      <h3 id="historicoClienteTitle">Histórico</h3>
+      <button onclick="closeModal('modalHistoricoCliente')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div class="table-scroll"><table>
+        <thead><tr><th>Data</th><th>Podcast</th><th>Valor</th><th>Produção</th><th>Pagamento</th></tr></thead>
+        <tbody id="historicoClienteTbody"></tbody>
+      </table></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalHistoricoCliente')">Fechar</button>
     </div>
   </div>
 </div>
@@ -876,9 +937,14 @@ const DB_KEY = 'eps_data_v1';
 const DIAS_SEMANA = ['dom','seg','ter','qua','qui','sex','sab'];
 const DIAS_SEMANA_LBL = {dom:'Domingo', seg:'Segunda', ter:'Terça', qua:'Quarta', qui:'Quinta', sex:'Sexta', sab:'Sábado'};
 function horariosPadrao(){
-  // 15:30 e 18:30 ficam de fora por padrão — são os horários "quebrados" no espaço físico
-  const uteis = ['08:00','09:30','11:00','12:30','14:00','17:00','20:00'];
-  return { dom:[], seg:[...uteis], ter:[...uteis], qua:[...uteis], qui:[...uteis], sex:[...uteis], sab:[...uteis] };
+  // A sala é compartilhada com o IA Hub (reuniões durante o dia), então
+  // de seg a qui o Podcast fica com horário noturno; sexta é dia
+  // inteiro (sem reunião do IA Hub); fins de semana livres pro Podcast.
+  // 100% editável em ⚙️ Horários — isso é só o ponto de partida.
+  const noite = ['19:00','20:30'];
+  const sextaInteira = ['08:00','09:30','11:00','12:30','14:00','16:00','17:30','19:00','20:30'];
+  const fimDeSemana = ['09:00','11:00','14:00','16:00','18:00','20:00'];
+  return { dom:[], seg:[...noite], ter:[...noite], qua:[...noite], qui:[...noite], sex:[...sextaInteira], sab:[...fimDeSemana] };
 }
 function loadDB(){
   try{
@@ -932,6 +998,45 @@ function submitLogin(){
   closeModal('modalLogin');
   openApp();
 }
+/* ---------- Exportar CSV ---------- */
+function toCSV(rows, headers){
+  const esc = v => `"${String(v??'').replace(/"/g,'""')}"`;
+  const lines = [headers.map(esc).join(';')];
+  rows.forEach(r => lines.push(r.map(esc).join(';')));
+  return lines.join('\r\n');
+}
+function downloadCSV(filename, csvStr){
+  const blob = new Blob(['﻿'+csvStr], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function exportClientesCSV(){
+  const headers = ['Nome','WhatsApp','Empresa/Podcast','E-mail','Endereço','CPF/CNPJ','Instagram','Aniversário','Indicado por','Gravações','Total gasto'];
+  const rows = db.clientes.map(c=>{
+    const reservas = db.reservas.filter(r=>r.clienteId===c.id);
+    const total = reservas.reduce((s,r)=>s+(r.valor||0),0);
+    return [c.nome,c.whatsapp,c.empresa,c.email,c.endereco,c.documento,c.instagram,c.aniversario,c.indicadoPor,reservas.length,total.toFixed(2)];
+  });
+  downloadCSV(`clientes-${fmtDate(new Date())}.csv`, toCSV(rows,headers));
+}
+function exportFinanceiroCSV(){
+  const ym = ymOf(finPeriod);
+  const reservasMes = db.reservas.filter(r=>r.data && r.data.startsWith(ym));
+  const despesasMes = db.despesas.filter(d=>d.data && d.data.startsWith(ym));
+  const headersR = ['Data','Cliente','Podcast','Valor','Forma','Status'];
+  const rowsR = reservasMes.map(r=>{
+    const cli = db.clientes.find(c=>c.id===r.clienteId);
+    return [r.data, cli?cli.nome:'', r.podcast, (r.valor||0).toFixed(2), r.formaPagamento, r.pagamento==='pago'?'Pago':'A receber'];
+  });
+  const headersD = ['Vencimento','Descrição','Categoria','Valor','Status'];
+  const rowsD = despesasMes.map(d=>[d.data, d.descricao, d.categoria, (d.valor||0).toFixed(2), d.pago?'Pago':'A pagar']);
+  const csv = 'RESERVAS DO PERÍODO\r\n' + toCSV(rowsR, headersR) + '\r\n\r\nDESPESAS DO PERÍODO\r\n' + toCSV(rowsD, headersD);
+  downloadCSV(`financeiro-${ym}.csv`, csv);
+}
+
 /* ---------- Backup (exportar/importar) ----------
    Enquanto os dados vivem só no localStorage deste navegador, isso é
    a única rede de segurança real: se o cache limpar ou trocar de
@@ -1165,36 +1270,49 @@ function renderAgenda(){
 }
 
 function renderAgendaWeek(){
-  const week = document.getElementById('weekGrid');
+  const container = document.getElementById('weekGrid');
   // acha o domingo da semana de agendaDate
   const start = new Date(agendaDate);
   start.setDate(start.getDate() - start.getDay());
   const hojeStr = fmtDate(new Date());
 
-  let html = '';
+  const days = [];
+  const allSlots = new Set();
   for(let i=0;i<7;i++){
     const d = new Date(start); d.setDate(start.getDate()+i);
     const dateStr = fmtDate(d);
     const horarios = horariosDoDia(d);
-    const dayReservas = db.reservas.filter(r=>r.data===dateStr);
-    html += `<div class="week-day ${dateStr===hojeStr?'is-today':''}">
-      <div class="week-day-head"><div class="dow">${DIAS_SEMANA_LBL[diaKey(d)]}</div><div class="dnum">${d.getDate()}/${d.getMonth()+1}</div></div>`;
-    if(!horarios.length){
-      html += `<div class="week-empty">Fechado</div>`;
-    } else {
-      horarios.forEach(hora=>{
-        const reserva = dayReservas.find(r=>r.hora===hora);
+    horarios.forEach(h=>allSlots.add(h));
+    days.push({ d, dateStr, horarios, reservas: db.reservas.filter(r=>r.data===dateStr) });
+  }
+  const slots = [...allSlots].sort();
+
+  let html = `<div class="week-cal-cell-head"></div>` + days.map(day=>
+    `<div class="week-cal-head ${day.dateStr===hojeStr?'is-today':''}">${DIAS_SEMANA_LBL[diaKey(day.d)].slice(0,3)}<br>${day.d.getDate()}/${day.d.getMonth()+1}</div>`
+  ).join('');
+
+  if(!slots.length){
+    container.innerHTML = html + `<div class="week-empty">Nenhum horário configurado nessa semana — abra ⚙️ Horários pra liberar.</div>`;
+    return;
+  }
+
+  slots.forEach(hora=>{
+    html += `<div class="week-cal-time">${hora}</div>`;
+    days.forEach(day=>{
+      if(!day.horarios.includes(hora)){
+        html += `<div class="week-cal-cell off">·</div>`;
+      } else {
+        const reserva = day.reservas.find(r=>r.hora===hora);
         if(reserva){
           const cli = db.clientes.find(c=>c.id===reserva.clienteId);
-          html += `<div class="week-slot busy" onclick="openReservaModal('${dateStr}','${hora}','${reserva.id}')">${hora} <span class="cli">${cli?cli.nome:'—'}</span></div>`;
+          html += `<div class="week-cal-cell busy" onclick="openReservaModal('${day.dateStr}','${hora}','${reserva.id}')" title="${cli?cli.nome:''}">${cli?cli.nome.split(' ')[0]:'—'}</div>`;
         } else {
-          html += `<div class="week-slot" onclick="openReservaModal('${dateStr}','${hora}',null)">${hora} livre</div>`;
+          html += `<div class="week-cal-cell" onclick="openReservaModal('${day.dateStr}','${hora}',null)">+</div>`;
         }
-      });
-    }
-    html += `</div>`;
-  }
-  week.innerHTML = html;
+      }
+    });
+  });
+  container.innerHTML = html;
 }
 
 /* ---------- Configuração de horários ---------- */
@@ -1208,10 +1326,24 @@ function openHorariosModal(){
   document.getElementById('modalHorarios').classList.add('on');
 }
 function saveHorarios(){
-  DIAS_SEMANA.forEach(k=>{
+  const HORA_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+  const novosHorarios = {};
+  const invalidos = [];
+  for(const k of DIAS_SEMANA){
     const raw = document.getElementById('hor-'+k).value;
-    db.horarios[k] = raw.split(',').map(s=>s.trim()).filter(Boolean).sort();
-  });
+    const itens = raw.split(',').map(s=>s.trim()).filter(Boolean);
+    const validos = [];
+    itens.forEach(h=>{
+      if(HORA_RE.test(h)) validos.push(h);
+      else invalidos.push(`${DIAS_SEMANA_LBL[k]}: "${h}"`);
+    });
+    novosHorarios[k] = [...new Set(validos)].sort();
+  }
+  if(invalidos.length){
+    alert('Esses horários não estão no formato HH:MM e não foram salvos:\n\n' + invalidos.join('\n') + '\n\nCorrija e tente de novo.');
+    return;
+  }
+  db.horarios = novosHorarios;
   saveDB();
   closeModal('modalHorarios');
   renderAgenda();
@@ -1366,12 +1498,21 @@ function deleteClienteCurrent(){
 }
 
 function renderClientes(){
+  const busca = (document.getElementById('clienteBusca')?.value || '').toLowerCase().trim();
   const tbody = document.getElementById('clientesTbody');
-  if(!db.clientes.length){
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum cliente cadastrado ainda.</td></tr>';
+  let lista = db.clientes;
+  if(busca){
+    lista = lista.filter(c =>
+      (c.nome||'').toLowerCase().includes(busca) ||
+      (c.empresa||'').toLowerCase().includes(busca) ||
+      (c.whatsapp||'').toLowerCase().includes(busca)
+    );
+  }
+  if(!lista.length){
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">${busca ? 'Nenhum cliente encontrado pra essa busca.' : 'Nenhum cliente cadastrado ainda.'}</td></tr>`;
     return;
   }
-  tbody.innerHTML = db.clientes.map(c=>{
+  tbody.innerHTML = lista.map(c=>{
     const reservas = db.reservas.filter(r=>r.clienteId===c.id);
     const totalGasto = reservas.reduce((s,r)=>s+(r.valor||0),0);
     return `<tr onclick="openClienteModal('${c.id}')" style="cursor:pointer;">
@@ -1379,11 +1520,28 @@ function renderClientes(){
       <td>${c.whatsapp||'—'}</td>
       <td>${c.empresa||'—'}</td>
       <td>${c.indicadoPor||'—'}</td>
-      <td>${reservas.length}</td>
+      <td onclick="event.stopPropagation(); verHistoricoCliente('${c.id}')" style="text-decoration:underline; cursor:pointer;" title="Ver histórico">${reservas.length}</td>
       <td class="col-valor">${money(totalGasto)}</td>
       <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openClienteModal('${c.id}')">Editar</button></td>
     </tr>`;
   }).join('');
+}
+
+function verHistoricoCliente(clienteId){
+  const cli = db.clientes.find(c=>c.id===clienteId);
+  if(!cli) return;
+  document.getElementById('historicoClienteTitle').textContent = 'Histórico — ' + cli.nome;
+  const reservas = db.reservas.filter(r=>r.clienteId===clienteId).sort((a,b)=>b.data.localeCompare(a.data));
+  const tbody = document.getElementById('historicoClienteTbody');
+  tbody.innerHTML = reservas.length ? reservas.map(r=>`
+    <tr onclick="closeModal('modalHistoricoCliente'); openReservaModal('${r.data}','${r.hora}','${r.id}')" style="cursor:pointer;">
+      <td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${r.podcast||'—'}</td>
+      <td>${money(r.valor)}</td>
+      <td><span class="badge gray">${r.status}</span></td>
+      <td><span class="badge ${r.pagamento==='pago'?'green':'amber'}">${r.pagamento==='pago'?'Pago':'A receber'}</span></td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma gravação ainda.</td></tr>';
+  document.getElementById('modalHistoricoCliente').classList.add('on');
 }
 
 /* ---------- PRODUÇÃO (kanban) ---------- */
@@ -1514,6 +1672,20 @@ function renderFinanceiro(){
     compEl.style.color = delta>=0 ? 'var(--green)' : 'var(--red)';
   }
 
+  // Ocupação da sala no período
+  const ocup = occupancyForMonth(ym);
+  document.getElementById('finOcupacao').textContent = ocup.totalSlots ? Math.round(ocup.pct) + '%' : '—';
+  document.getElementById('finOcupacaoQtd').textContent = ocup.totalSlots ? `${ocup.occupied} de ${ocup.totalSlots} horários` : 'sem horários configurados';
+
+  // Meta de faturamento
+  const meta = db.config.metaFaturamento || 0;
+  document.getElementById('metaFaturamentoInput').value = meta || '';
+  const metaPct = meta>0 ? Math.min(100, (recebido/meta)*100) : 0;
+  document.getElementById('metaBarFill').style.width = metaPct + '%';
+  document.getElementById('metaBarLabel').textContent = meta>0
+    ? `${money(recebido)} de ${money(meta)} (${Math.round(metaPct)}%)${recebido>=meta?' 🎉 meta batida!':''}`
+    : 'Defina uma meta pra acompanhar o progresso do mês.';
+
   const tbody = document.getElementById('finReservasTbody');
   tbody.innerHTML = reservasMes.length ? reservasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
     const cli = db.clientes.find(c=>c.id===r.clienteId);
@@ -1573,12 +1745,54 @@ function renderFinanceiro(){
   document.getElementById('finComissoesTbody').innerHTML = comissaoRows.length ? comissaoRows.map(([ind,v])=>`
     <tr><td>${ind}</td><td>${v.count}</td><td>${money(v.total)}</td><td class="col-valor" style="color:var(--gold); font-weight:700;">${money(v.total*pctComissao/100)}</td></tr>
   `).join('') : '<tr class="empty-row"><td colspan="4">Nenhuma reserva paga de cliente indicado neste período.</td></tr>';
+
+  renderRankingClientes();
 }
 
 function saveComissaoPct(){
   db.config.comissaoPct = Number(document.getElementById('comissaoPctInput').value) || 0;
   saveDB();
   renderFinanceiro();
+}
+
+function saveMetaFaturamento(){
+  db.config.metaFaturamento = Number(document.getElementById('metaFaturamentoInput').value) || 0;
+  saveDB();
+  renderFinanceiro();
+}
+
+/* ---------- Ocupação da sala ---------- */
+function occupancyForMonth(ymStr){
+  const [y,m] = ymStr.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  let totalSlots = 0;
+  for(let day=1; day<=daysInMonth; day++){
+    totalSlots += horariosDoDia(new Date(y, m-1, day)).length;
+  }
+  const occupied = db.reservas.filter(r=>r.data && r.data.startsWith(ymStr)).length;
+  return { totalSlots, occupied, pct: totalSlots ? (occupied/totalSlots*100) : 0 };
+}
+
+/* ---------- Ranking de clientes ---------- */
+function renderRankingClientes(){
+  const comTotais = db.clientes.map(c=>{
+    const reservas = db.reservas.filter(r=>r.clienteId===c.id).sort((a,b)=>b.data.localeCompare(a.data));
+    const total = reservas.reduce((s,r)=>s+(r.valor||0),0);
+    return { c, total, qtd: reservas.length, ultima: reservas[0] ? reservas[0].data : null, ticketMedio: reservas.length ? total/reservas.length : 0 };
+  });
+
+  const topGastadores = [...comTotais].filter(x=>x.total>0).sort((a,b)=>b.total-a.total).slice(0,5);
+  document.getElementById('finRankingTbody').innerHTML = topGastadores.length ? topGastadores.map(x=>`
+    <tr><td>${x.c.nome}</td><td>${x.qtd}</td><td>${money(x.ticketMedio)}</td><td class="col-valor" style="font-weight:700;">${money(x.total)}</td></tr>
+  `).join('') : '<tr class="empty-row"><td colspan="4">Nenhum cliente com gravação paga ainda.</td></tr>';
+
+  const hojeD = new Date();
+  const inativos = comTotais.filter(x=>x.ultima).map(x=>({
+    ...x, dias: Math.floor((hojeD - new Date(x.ultima+'T00:00:00')) / (1000*60*60*24))
+  })).filter(x=>x.dias > 60).sort((a,b)=>b.dias-a.dias);
+  document.getElementById('finInativosTbody').innerHTML = inativos.length ? inativos.map(x=>`
+    <tr><td>${x.c.nome}</td><td>${new Date(x.ultima+'T00:00:00').toLocaleDateString('pt-BR')}</td><td>${x.dias} dias</td></tr>
+  `).join('') : '<tr class="empty-row"><td colspan="3">Nenhum cliente inativo há mais de 60 dias.</td></tr>';
 }
 
 function marcarPago(reservaId){
