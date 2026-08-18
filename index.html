@@ -498,8 +498,8 @@
       <img src="assets/logo.jpeg" alt="logo">
       <div class="txt">Enterprise<small>Área da Equipe</small></div>
     </div>
-    <button class="nav-item active" data-view="agenda"><span class="ic">📅</span> Agenda</button>
-    <button class="nav-item" data-view="clientes"><span class="ic">👥</span> Clientes</button>
+    <button class="nav-item active" data-view="clientes"><span class="ic">👥</span> Clientes</button>
+    <button class="nav-item" data-view="agenda"><span class="ic">📅</span> Agenda</button>
     <button class="nav-item" data-view="producao"><span class="ic">🎬</span> Produção</button>
     <button class="nav-item" data-view="financeiro"><span class="ic">💰</span> Financeiro</button>
     <div class="side-bottom">
@@ -512,15 +512,15 @@
     <div class="topbar">
       <button class="nav-item" id="mobileToggle" onclick="toggleSide()">☰</button>
       <div>
-        <h1 id="topTitle">Agenda</h1>
-        <div class="sub" id="topSub">Sala única — clique num horário livre para reservar</div>
+        <h1 id="topTitle">Clientes</h1>
+        <div class="sub" id="topSub">Cadastro e histórico de gravações — comece por aqui</div>
       </div>
       <div style="font-size:12px;color:var(--text-faint);">Dados salvos neste navegador · Supabase em breve</div>
     </div>
 
     <div class="view">
       <!-- AGENDA -->
-      <div class="view-panel on" id="view-agenda">
+      <div class="view-panel" id="view-agenda">
         <div class="agenda-toolbar">
           <div class="day-nav">
             <button class="icon-btn" onclick="agendaMove(-1)">‹</button>
@@ -537,7 +537,7 @@
       </div>
 
       <!-- CLIENTES -->
-      <div class="view-panel" id="view-clientes">
+      <div class="view-panel on" id="view-clientes">
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head">
             <h3>Novo cliente</h3>
@@ -587,7 +587,7 @@
         <div class="panel">
           <div class="panel-head"><h3>Reservas do mês (recebido / a receber)</h3></div>
           <table>
-            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Status</th></tr></thead>
+            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Forma</th><th>Status</th></tr></thead>
             <tbody id="finReservasTbody"></tbody>
           </table>
         </div>
@@ -623,9 +623,20 @@
       <div class="field-row">
         <div class="field"><label>Valor (R$)</label><input type="number" id="resValor" placeholder="0,00" step="0.01"></div>
         <div class="field">
-          <label>Pagamento</label>
+          <label>Status</label>
           <select id="resPagamento"><option value="pendente">A receber</option><option value="pago">Pago</option></select>
         </div>
+      </div>
+      <div class="field">
+        <label>Forma de pagamento</label>
+        <select id="resFormaPagamento">
+          <option value="">Ainda não definida</option>
+          <option value="Pix">Pix</option>
+          <option value="Cartão de crédito">Cartão de crédito</option>
+          <option value="Cartão de débito">Cartão de débito</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Transferência">Transferência</option>
+        </select>
       </div>
       <div class="field"><label>Observação</label><textarea id="resObs" rows="2" placeholder="Detalhes da gravação..."></textarea></div>
     </div>
@@ -754,7 +765,7 @@ function renderAgenda(){
       const cli = db.clientes.find(c=>c.id===reserva.clienteId);
       slot.className = 'slot busy';
       slot.innerHTML = `<span class="time">${hora}</span>
-        <div class="slot-info"><div class="cli">${cli?cli.nome:'Cliente removido'}</div><div class="pod">${reserva.podcast||''} · ${reserva.duracao}min</div></div>
+        <div class="slot-info"><div class="cli">${cli?cli.nome:'Cliente removido'}</div><div class="pod">${reserva.podcast||''} · ${reserva.duracao}min${reserva.formaPagamento?' · '+reserva.formaPagamento:''}</div></div>
         <span class="badge ${reserva.pagamento==='pago'?'green':'amber'}">${reserva.pagamento==='pago'?'Pago':'A receber'}</span>`;
       slot.onclick = ()=>openReservaModal(dateStr, hora, reserva.id);
     } else {
@@ -782,6 +793,7 @@ function openReservaModal(dateStr, hora, reservaId){
     document.getElementById('resDuracao').value = r.duracao;
     document.getElementById('resValor').value = r.valor;
     document.getElementById('resPagamento').value = r.pagamento;
+    document.getElementById('resFormaPagamento').value = r.formaPagamento||'';
     document.getElementById('resObs').value = r.obs||'';
     document.getElementById('resDeleteBtn').style.display = 'inline-block';
   } else {
@@ -791,6 +803,7 @@ function openReservaModal(dateStr, hora, reservaId){
     document.getElementById('resDuracao').value = 90;
     document.getElementById('resValor').value = '';
     document.getElementById('resPagamento').value = 'pendente';
+    document.getElementById('resFormaPagamento').value = '';
     document.getElementById('resObs').value = '';
     document.getElementById('resDeleteBtn').style.display = 'none';
   }
@@ -810,6 +823,7 @@ function saveReserva(){
     duracao: Number(document.getElementById('resDuracao').value)||90,
     valor: Number(document.getElementById('resValor').value)||0,
     pagamento: document.getElementById('resPagamento').value,
+    formaPagamento: document.getElementById('resFormaPagamento').value,
     obs: document.getElementById('resObs').value.trim(),
   };
   if(currentReservaId){
@@ -953,9 +967,10 @@ function renderFinanceiro(){
       <td>${cli?cli.nome:'—'}</td>
       <td>${r.podcast||'—'}</td>
       <td>${money(r.valor)}</td>
+      <td>${r.formaPagamento||'—'}</td>
       <td><span class="badge ${r.pagamento==='pago'?'green':'amber'}">${r.pagamento==='pago'?'Pago':'A receber'}</span></td>
     </tr>`;
-  }).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma reserva este mês.</td></tr>';
+  }).join('') : '<tr class="empty-row"><td colspan="6">Nenhuma reserva este mês.</td></tr>';
 
   const tbodyD = document.getElementById('finDespesasTbody');
   tbodyD.innerHTML = despesasMes.length ? despesasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(d=>`
