@@ -814,6 +814,18 @@
       <!-- CADASTROS -->
       <div class="view-panel" id="view-cadastros">
         <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head">
+            <h3>Usuários da Área da Equipe</h3>
+            <button class="btn btn-gold" onclick="openUsuarioModal(null)">+ Novo usuário</button>
+          </div>
+          <p class="contact-note" style="margin:0 20px 12px;">Cada sócio/funcionário com seu próprio login e senha. Administrador vê tudo (inclusive Financeiro); Operador só Agenda, Clientes e Produção.</p>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
+            <tbody id="usuariosTbody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Meta de faturamento mensal</h3></div>
           <div class="panel-body" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <label style="margin:0; text-transform:none; font-size:13px; color:var(--text-dim);">Meta (R$)</label>
@@ -878,15 +890,9 @@
       <button onclick="closeModal('modalLogin')">✕</button>
     </div>
     <div class="modal-body">
-      <div class="field">
-        <label>Perfil</label>
-        <select id="loginRole">
-          <option value="admin">Administrador — acesso completo</option>
-          <option value="operador">Operador — Agenda, Clientes e Produção</option>
-        </select>
-      </div>
-      <div class="field"><label>PIN</label><input type="password" id="loginPin" placeholder="••••" inputmode="numeric" maxlength="6"></div>
-      <p class="contact-note">Proteção simples, local neste navegador — só pra separar quem enxerga o Financeiro. Segurança de verdade chega junto com o Supabase.</p>
+      <div class="field"><label>Login</label><input type="text" id="loginUsuario" placeholder="seu login" autocapitalize="off"></div>
+      <div class="field"><label>Senha</label><input type="password" id="loginSenha" placeholder="••••"></div>
+      <p class="contact-note">Proteção simples, local neste navegador — só pra separar quem enxerga o Financeiro. Segurança de verdade chega junto com o Supabase. Login/senha são cadastrados em Cadastros → Usuários.</p>
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModal('modalLogin')">Cancelar</button>
@@ -909,6 +915,38 @@
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModal('modalHorarios')">Cancelar</button>
       <button class="btn btn-gold" onclick="saveHorarios()">Salvar horários</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Usuário -->
+<div class="modal-bg" id="modalUsuario">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalUsuarioTitle">Novo usuário</h3>
+      <button onclick="closeModal('modalUsuario')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>Nome</label><input type="text" id="usuNome" placeholder="Nome da pessoa"></div>
+        <div class="field"><label>Login</label><input type="text" id="usuLogin" placeholder="ex: camila" autocapitalize="off"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Senha</label><input type="text" id="usuSenha" placeholder="defina uma senha"></div>
+        <div class="field">
+          <label>Perfil</label>
+          <select id="usuRole">
+            <option value="admin">Administrador — acesso completo</option>
+            <option value="operador">Operador — Agenda, Clientes e Produção</option>
+          </select>
+        </div>
+      </div>
+      <label class="check-inline"><input type="checkbox" id="usuAtivo" checked> Ativo (consegue entrar na Área da Equipe)</label>
+    </div>
+    <div class="modal-foot">
+      <button class="icon-btn" id="usuDeleteBtn" style="display:none;color:var(--red);" onclick="deleteUsuarioCurrent()">Remover</button>
+      <button class="btn btn-outline" onclick="closeModal('modalUsuario')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveUsuario()">Salvar</button>
     </div>
   </div>
 </div>
@@ -1086,6 +1124,11 @@ function horariosPadrao(){
   const fimDeSemana = ['09:00','11:00','14:00','16:00','18:00','20:00'];
   return { dom:[], seg:[...noite], ter:[...noite], qua:[...noite], qui:[...noite], sex:[...sextaInteira], sab:[...fimDeSemana] };
 }
+function usuariosPadrao(){
+  // conta padrão pra nunca ficar trancado pra fora — troque a senha
+  // em Cadastros assim que possível e crie os logins dos sócios
+  return [{ id:'admin-padrao', nome:'Administrador', login:'admin', senha:'1234', role:'admin', ativo:true }];
+}
 function loadDB(){
   try{
     const raw = localStorage.getItem(DB_KEY);
@@ -1094,10 +1137,11 @@ function loadDB(){
       if(!parsed.horarios) parsed.horarios = horariosPadrao();
       if(!parsed.config) parsed.config = {};
       if(!parsed.comissionados) parsed.comissionados = [];
+      if(!parsed.usuarios || !parsed.usuarios.length) parsed.usuarios = usuariosPadrao();
       return parsed;
     }
   }catch(e){}
-  return { clientes: [], reservas: [], despesas: [], comissionados: [], horarios: horariosPadrao(), config: {} };
+  return { clientes: [], reservas: [], despesas: [], comissionados: [], usuarios: usuariosPadrao(), horarios: horariosPadrao(), config: {} };
 }
 function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
@@ -1118,23 +1162,30 @@ function closeApp(){
 }
 
 /* ---------- Login / níveis de acesso ----------
-   Proteção simples e local (sem backend ainda): separa Administrador
-   (vê tudo, inclusive Financeiro) de Operador (Agenda, Clientes e
-   Produção, sem valores agregados). Trocar os PINs abaixo à vontade;
-   quando o Supabase Auth entrar, isso vira login de verdade. */
-const ROLE_PINS = { admin: '1234', operador: '0000' };
+   Proteção simples e local (sem backend ainda): cada pessoa tem seu
+   próprio login/senha, cadastrados em Cadastros → Usuários, com perfil
+   Administrador (vê tudo, inclusive Financeiro) ou Operador (Agenda,
+   Clientes e Produção, sem valores agregados). Não é segurança de
+   verdade — isso chega com o Supabase Auth. */
 const ROLE_LABELS = { admin: 'Administrador', operador: 'Operador' };
 
+function usuarioLogado(){
+  const id = sessionStorage.getItem('eps_usuario_id');
+  return id ? db.usuarios.find(u=>u.id===id && u.ativo) : null;
+}
 function requestAppAccess(){
-  if(sessionStorage.getItem('eps_role')){ openApp(); return; }
+  if(usuarioLogado()){ openApp(); return; }
+  sessionStorage.removeItem('eps_usuario_id');
   document.getElementById('modalLogin').classList.add('on');
 }
 function submitLogin(){
-  const role = document.getElementById('loginRole').value;
-  const pin = document.getElementById('loginPin').value;
-  if(pin !== ROLE_PINS[role]){ alert('PIN incorreto.'); return; }
-  sessionStorage.setItem('eps_role', role);
-  document.getElementById('loginPin').value = '';
+  const login = document.getElementById('loginUsuario').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const usuario = db.usuarios.find(u=>u.login===login && u.senha===senha && u.ativo);
+  if(!usuario){ alert('Login ou senha incorretos.'); return; }
+  sessionStorage.setItem('eps_usuario_id', usuario.id);
+  document.getElementById('loginUsuario').value = '';
+  document.getElementById('loginSenha').value = '';
   closeModal('modalLogin');
   openApp();
 }
@@ -1209,6 +1260,7 @@ function importBackup(e){
       if(!parsed.horarios) parsed.horarios = horariosPadrao();
       if(!parsed.config) parsed.config = {};
       if(!parsed.comissionados) parsed.comissionados = [];
+      if(!parsed.usuarios || !parsed.usuarios.length) parsed.usuarios = usuariosPadrao();
       db = parsed;
       saveDB();
       alert('Backup importado com sucesso!');
@@ -1222,13 +1274,14 @@ function importBackup(e){
 }
 
 function logoutRole(){
-  sessionStorage.removeItem('eps_role');
+  sessionStorage.removeItem('eps_usuario_id');
   closeApp();
 }
 function applyRolePermissions(){
-  const role = sessionStorage.getItem('eps_role') || 'operador';
+  const usuario = usuarioLogado();
+  const role = usuario ? usuario.role : 'operador';
   const isAdmin = role === 'admin';
-  document.getElementById('currentRoleLbl').textContent = ROLE_LABELS[role];
+  document.getElementById('currentRoleLbl').textContent = usuario ? `${usuario.nome} (${ROLE_LABELS[role]})` : ROLE_LABELS[role];
   document.querySelector('.nav-item[data-view="financeiro"]').style.display = isAdmin ? '' : 'none';
   document.querySelector('.nav-item[data-view="dashboard"]').style.display = isAdmin ? '' : 'none';
   document.querySelector('.nav-item[data-view="cadastros"]').style.display = isAdmin ? '' : 'none';
@@ -1319,7 +1372,7 @@ function activateView(v){
   if(v==='producao') renderKanban();
   if(v==='financeiro') renderFinanceiro();
   if(v==='dashboard') renderDashboard();
-  if(v==='cadastros') renderComissionados();
+  if(v==='cadastros'){ renderUsuarios(); renderComissionados(); }
 }
 document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
   btn.addEventListener('click', ()=>activateView(btn.dataset.view));
@@ -2024,6 +2077,72 @@ function savePrazoRepasse(){
   saveDB();
   alert('Prazo de repasse salvo: ' + db.config.prazoRepasseDias + ' dias.');
 }
+/* ---------- Usuários ---------- */
+let currentUsuarioId = null;
+function openUsuarioModal(id){
+  currentUsuarioId = id;
+  const u = id ? db.usuarios.find(x=>x.id===id) : null;
+  document.getElementById('modalUsuarioTitle').textContent = u ? 'Editar usuário' : 'Novo usuário';
+  document.getElementById('usuNome').value = u?.nome || '';
+  document.getElementById('usuLogin').value = u?.login || '';
+  document.getElementById('usuSenha').value = u?.senha || '';
+  document.getElementById('usuRole').value = u?.role || 'operador';
+  document.getElementById('usuAtivo').checked = u ? !!u.ativo : true;
+  document.getElementById('usuDeleteBtn').style.display = u ? 'inline-block' : 'none';
+  document.getElementById('modalUsuario').classList.add('on');
+}
+function admsAtivosExcluindo(id){
+  return db.usuarios.filter(u=>u.id!==id && u.role==='admin' && u.ativo);
+}
+function saveUsuario(){
+  const nome = document.getElementById('usuNome').value.trim();
+  const login = document.getElementById('usuLogin').value.trim();
+  const senha = document.getElementById('usuSenha').value;
+  if(!nome || !login || !senha){ alert('Preencha nome, login e senha.'); return; }
+  const loginDuplicado = db.usuarios.find(u=>u.login===login && u.id!==currentUsuarioId);
+  if(loginDuplicado){ alert('Já existe um usuário com esse login.'); return; }
+  const role = document.getElementById('usuRole').value;
+  const ativo = document.getElementById('usuAtivo').checked;
+  if(currentUsuarioId && (role!=='admin' || !ativo) && admsAtivosExcluindo(currentUsuarioId).length===0){
+    alert('Esse é o último Administrador ativo — não dá pra rebaixar ou desativar sem cadastrar outro admin antes.');
+    return;
+  }
+  const data = { nome, login, senha, role, ativo };
+  if(currentUsuarioId){
+    Object.assign(db.usuarios.find(x=>x.id===currentUsuarioId), data);
+  } else {
+    db.usuarios.push(Object.assign({id:uid(), criadoEm:new Date().toISOString()}, data));
+  }
+  saveDB();
+  closeModal('modalUsuario');
+  renderUsuarios();
+  applyRolePermissions();
+}
+function deleteUsuarioCurrent(){
+  if(!currentUsuarioId) return;
+  const alvo = db.usuarios.find(u=>u.id===currentUsuarioId);
+  if(alvo.role==='admin' && admsAtivosExcluindo(currentUsuarioId).length===0){
+    alert('Esse é o último Administrador ativo — cadastre outro admin antes de remover este.');
+    return;
+  }
+  if(!confirm(`Remover o usuário "${alvo.nome}"?`)) return;
+  db.usuarios = db.usuarios.filter(x=>x.id!==currentUsuarioId);
+  saveDB();
+  closeModal('modalUsuario');
+  renderUsuarios();
+}
+function renderUsuarios(){
+  const tbody = document.getElementById('usuariosTbody');
+  tbody.innerHTML = db.usuarios.length ? db.usuarios.map(u=>`
+    <tr onclick="openUsuarioModal('${u.id}')" style="cursor:pointer;">
+      <td><b>${u.nome}</b></td>
+      <td>${u.login}</td>
+      <td>${ROLE_LABELS[u.role]||u.role}</td>
+      <td><span class="badge ${u.ativo?'green':'gray'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openUsuarioModal('${u.id}')">Editar</button></td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhum usuário cadastrado.</td></tr>';
+}
+
 function renderComissionados(){
   document.getElementById('prazoRepasseInput').value = db.config.prazoRepasseDias ?? 5;
   const tbody = document.getElementById('comissionadosTbody');
