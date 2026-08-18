@@ -268,17 +268,27 @@
   .icon-btn:hover{border-color:var(--gold); color:var(--gold);}
   .role-operador .col-valor{display:none;}
 
-  .meta-bar-track{width:100%; height:14px; border-radius:8px; background:var(--card2); border:1px solid var(--border2); overflow:hidden;}
-  .meta-bar-fill{height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); border-radius:8px 0 0 8px; transition:width .3s; width:0%;}
+  .meta-bar-track{width:100%; height:7px; border-radius:6px; background:var(--card2); border:1px solid var(--border2); overflow:hidden;}
+  .meta-bar-fill{height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold)); border-radius:6px 0 0 6px; transition:width .3s; width:0%;}
 
   .fin-subtab{display:none;}
   .fin-subtab.on{display:block;}
 
+  .dash-grid-2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media(max-width:860px){ .dash-grid-2{grid-template-columns:1fr;} }
+
+  .chip-list{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{background:var(--card2); border:1px solid var(--border2); border-radius:20px; padding:7px 14px; font-size:12.5px; font-weight:600; color:var(--text-dim); cursor:pointer; transition:border-color .15s,color .15s;}
+  .chip:hover{border-color:var(--gold); color:var(--gold);}
+
   .evolucao-chart{display:flex; align-items:flex-end; gap:12px; padding:10px 4px 0; min-height:160px;}
+  .evolucao-chart.compact{min-height:80px; gap:8px;}
+  .evolucao-chart.compact .evo-bar{max-width:28px;}
   .evo-bar-col{display:flex; flex-direction:column; align-items:center; gap:6px; flex:1;}
   .evo-bar-val{font-size:10px; color:var(--text-dim); font-weight:700; white-space:nowrap;}
   .evo-bar{width:100%; max-width:44px; background:linear-gradient(180deg,var(--gold),var(--gold-dim)); border-radius:6px 6px 0 0; min-height:4px;}
   .evo-bar-lbl{font-size:11px; color:var(--text-faint); font-weight:700; text-transform:uppercase;}
+  .evo-empty{color:var(--text-faint); font-size:12px; padding:20px 0; text-align:center; width:100%;}
   .check-inline{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); font-weight:600; text-transform:none; letter-spacing:0;}
   .check-inline input{width:auto;}
   .extra-add-row{display:flex; gap:6px; margin-bottom:8px;}
@@ -561,10 +571,10 @@
       <img src="assets/logo.jpeg" alt="logo">
       <div class="txt">Enterprise<small>Área da Equipe</small></div>
     </div>
+    <button class="nav-item" data-view="dashboard"><span class="ic">📊</span> Dashboard</button>
     <button class="nav-item active" data-view="clientes"><span class="ic">👥</span> Clientes</button>
     <button class="nav-item" data-view="agenda"><span class="ic">📅</span> Agenda</button>
     <button class="nav-item" data-view="producao"><span class="ic">🎬</span> Produção</button>
-    <button class="nav-item" data-view="dashboard"><span class="ic">📊</span> Dashboard</button>
     <button class="nav-item" data-view="financeiro"><span class="ic">💰</span> Financeiro</button>
     <button class="nav-item" data-view="cadastros"><span class="ic">🗂️</span> Cadastros</button>
     <div class="side-bottom">
@@ -659,63 +669,52 @@
           </div>
         </div>
 
-        <div class="panel dash-print-block" style="margin-bottom:20px;">
-          <div class="panel-head">
-            <h3>Meta de faturamento do mês</h3>
-            <div class="dash-no-print" style="display:flex; align-items:center; gap:8px;">
-              <label style="margin:0; text-transform:none; font-size:12px; color:var(--text-dim);">Meta (R$)</label>
-              <input type="number" id="metaFaturamentoInput" step="100" style="width:110px;">
-              <button class="icon-btn" onclick="saveMetaFaturamento()">Salvar</button>
-            </div>
-          </div>
-          <div class="panel-body">
-            <div class="meta-bar-track"><div class="meta-bar-fill" id="metaBarFill"></div></div>
-            <div class="hint" id="metaBarLabel" style="margin-top:8px;"></div>
-          </div>
-        </div>
-
-        <div class="panel dash-print-block" style="margin-bottom:20px;">
-          <div class="panel-head"><h3>📈 Evolução de faturamento (6 meses)</h3></div>
-          <div class="panel-body">
-            <div class="evolucao-chart" id="evolucaoChart"></div>
-          </div>
-        </div>
-
-        <div class="panel dash-print-block" style="margin-bottom:20px;">
-          <div class="panel-head"><h3>Reservas do período (recebido / a receber)</h3></div>
-          <div class="table-scroll"><table>
-            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Forma</th><th>Status</th><th class="dash-no-print"></th></tr></thead>
-            <tbody id="finReservasTbody"></tbody>
-          </table></div>
-        </div>
-
-        <div class="panel dash-print-block" style="margin-bottom:20px;">
-          <div class="panel-head"><h3>💸 Comissões pagas no período</h3></div>
-          <div class="table-scroll"><table>
-            <thead><tr><th>Comissionado</th><th>Vencimento</th><th>Valor</th></tr></thead>
-            <tbody id="dashComissoesPagasTbody"></tbody>
-          </table></div>
-        </div>
-
         <div class="stat-row dash-print-block" style="margin-bottom:20px;">
-          <div class="stat-card"><div class="lbl">Despesas pagas no período</div><div class="val red" id="dashDespesasPagas">R$ 0,00</div></div>
+          <div class="stat-card">
+            <div class="lbl">Meta do mês</div>
+            <div class="val gold" id="dashMetaPct">—</div>
+            <div class="hint" id="dashMetaHint"></div>
+            <div class="meta-bar-track" style="margin-top:8px;"><div class="meta-bar-fill" id="metaBarFill"></div></div>
+          </div>
+          <div class="stat-card">
+            <div class="lbl">Reservas do período</div>
+            <div class="val" id="dashReservasQtd">0</div>
+            <div class="hint" id="dashReservasHint"></div>
+          </div>
+          <div class="stat-card"><div class="lbl">Despesas pagas</div><div class="val red" id="dashDespesasPagas">R$ 0,00</div></div>
           <div class="stat-card"><div class="lbl">Despesas a pagar</div><div class="val amber" id="dashDespesasAPagar">R$ 0,00</div></div>
         </div>
 
-        <div class="panel dash-print-block" style="margin-bottom:20px;">
-          <div class="panel-head"><h3>🏆 Clientes que mais gastam (histórico completo)</h3></div>
-          <div class="table-scroll"><table>
-            <thead><tr><th>Cliente</th><th>Gravações</th><th>Ticket médio</th><th class="col-valor">Total gasto</th></tr></thead>
-            <tbody id="finRankingTbody"></tbody>
-          </table></div>
+        <div class="dash-grid-2 dash-print-block" style="margin-bottom:20px;">
+          <div class="panel">
+            <div class="panel-head"><h3>📈 Evolução de faturamento</h3></div>
+            <div class="panel-body">
+              <div class="evolucao-chart compact" id="evolucaoChart"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>💸 Comissões pagas</h3></div>
+            <div class="panel-body">
+              <div class="evolucao-chart compact" id="comissoesPagasChart"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="panel dash-print-block">
-          <div class="panel-head"><h3>⏳ Clientes sem gravação há mais de 60 dias</h3></div>
-          <div class="table-scroll"><table class="table-narrow">
-            <thead><tr><th>Cliente</th><th>Última gravação</th><th>Há quanto tempo</th></tr></thead>
-            <tbody id="finInativosTbody"></tbody>
-          </table></div>
+        <div class="dash-grid-2 dash-print-block">
+          <div class="panel">
+            <div class="panel-head"><h3>🏆 Clientes que mais gastam</h3></div>
+            <p class="contact-note" style="margin:0 20px 12px;">Clique num cliente pra ver o histórico completo.</p>
+            <div class="table-scroll"><table class="table-narrow">
+              <thead><tr><th>Cliente</th><th>Total gasto</th></tr></thead>
+              <tbody id="finRankingTbody"></tbody>
+            </table></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>⏳ Sem gravação há 60+ dias</h3></div>
+            <div class="panel-body">
+              <div class="chip-list" id="inativosChips"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -749,14 +748,25 @@
           </div>
         </div>
 
-        <div class="seg-toggle" style="margin-bottom:16px;">
-          <button class="seg-btn active" id="finSeg-apagar" onclick="setFinTab('apagar')">Contas a pagar</button>
+        <div class="seg-toggle" style="margin-bottom:16px; flex-wrap:wrap;">
+          <button class="seg-btn active" id="finSeg-reservas" onclick="setFinTab('reservas')">Reservas do período</button>
+          <button class="seg-btn" id="finSeg-apagar" onclick="setFinTab('apagar')">Contas a pagar</button>
           <button class="seg-btn" id="finSeg-pagas" onclick="setFinTab('pagas')">Despesas pagas</button>
           <button class="seg-btn" id="finSeg-categoria" onclick="setFinTab('categoria')">Por categoria</button>
           <button class="seg-btn" id="finSeg-comissoes" onclick="setFinTab('comissoes')">Comissões do período</button>
         </div>
 
-        <div class="fin-subtab on" id="fintab-apagar">
+        <div class="fin-subtab on" id="fintab-reservas">
+          <div class="panel">
+            <div class="panel-head"><h3>Reservas do período (recebido / a receber)</h3></div>
+            <div class="table-scroll"><table>
+              <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Forma</th><th>Status</th><th></th></tr></thead>
+              <tbody id="finReservasTbody"></tbody>
+            </table></div>
+          </div>
+        </div>
+
+        <div class="fin-subtab" id="fintab-apagar">
           <div class="panel">
             <div class="panel-head"><h3>Contas a pagar</h3></div>
             <div class="table-scroll"><table>
@@ -803,6 +813,15 @@
 
       <!-- CADASTROS -->
       <div class="view-panel" id="view-cadastros">
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head"><h3>Meta de faturamento mensal</h3></div>
+          <div class="panel-body" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <label style="margin:0; text-transform:none; font-size:13px; color:var(--text-dim);">Meta (R$)</label>
+            <input type="number" id="metaFaturamentoInput" step="100" style="width:140px;">
+            <button class="btn btn-outline" onclick="saveMetaFaturamento()">Salvar</button>
+          </div>
+        </div>
+
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Nova conta / despesa</h3></div>
           <div class="panel-body">
@@ -1814,6 +1833,23 @@ function renderFinanceiro(){
   document.getElementById('finOcupacao').textContent = ocup.totalSlots ? Math.round(ocup.pct) + '%' : '—';
   document.getElementById('finOcupacaoQtd').textContent = ocup.totalSlots ? `${ocup.occupied} de ${ocup.totalSlots} horários` : 'sem horários configurados';
 
+  const tbodyReservas = document.getElementById('finReservasTbody');
+  tbodyReservas.innerHTML = reservasMes.length ? reservasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
+    const cli = db.clientes.find(c=>c.id===r.clienteId);
+    const atrasada = r.pagamento!=='pago' && r.data < hojeStr;
+    const statusBadge = r.pagamento==='pago' ? '<span class="badge green">Pago</span>'
+      : atrasada ? '<span class="badge red">Atrasado</span>' : '<span class="badge amber">A receber</span>';
+    return `<tr>
+      <td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${cli?cli.nome:'—'}</td>
+      <td>${r.podcast||'—'}</td>
+      <td>${money(r.valor)}</td>
+      <td>${r.formaPagamento||'—'}</td>
+      <td>${statusBadge}</td>
+      <td style="display:flex; gap:6px;">${r.pagamento!=='pago' ? `<button class="icon-btn" onclick="marcarPago('${r.id}')">Marcar pago</button><button class="icon-btn" onclick="cobrarCliente('${r.id}')">Cobrar</button>` : ''}</td>
+    </tr>`;
+  }).join('') : '<tr class="empty-row"><td colspan="7">Nenhuma reserva neste período.</td></tr>';
+
   const tbodyAPagar = document.getElementById('finAPagarTbody');
   tbodyAPagar.innerHTML = aPagarMes.length ? aPagarMes.sort((a,b)=>a.data.localeCompare(b.data)).map(d=>{
     const vencida = d.data < hojeStr;
@@ -1860,13 +1896,13 @@ function renderFinanceiro(){
 }
 
 function setFinTab(tab){
-  ['apagar','pagas','categoria','comissoes'].forEach(t=>{
+  ['reservas','apagar','pagas','categoria','comissoes'].forEach(t=>{
     document.getElementById('fintab-'+t).classList.toggle('on', t===tab);
     document.getElementById('finSeg-'+t).classList.toggle('active', t===tab);
   });
 }
 
-/* ---------- Dashboard ---------- */
+/* ---------- Dashboard (resumo executivo — números mastigados, detalhe fica na Financeiro) ---------- */
 function renderDashboard(){
   const ym = ymOf(finPeriod);
   document.getElementById('dashPeriodLbl').textContent = finPeriod.toLocaleDateString('pt-BR',{month:'long', year:'numeric'});
@@ -1874,46 +1910,30 @@ function renderDashboard(){
   const reservasMes = db.reservas.filter(r=>r.data && r.data.startsWith(ym));
   const despesasMes = db.despesas.filter(d=>d.data && d.data.startsWith(ym));
   const recebido = reservasMes.filter(r=>r.pagamento==='pago').reduce((s,r)=>s+(r.valor||0),0);
-  const hojeStr = fmtDate(new Date());
+  const aReceber = reservasMes.filter(r=>r.pagamento!=='pago').reduce((s,r)=>s+(r.valor||0),0);
 
-  // Meta de faturamento
+  // Meta (card compacto)
   const meta = db.config.metaFaturamento || 0;
   document.getElementById('metaFaturamentoInput').value = meta || '';
   const metaPct = meta>0 ? Math.min(100, (recebido/meta)*100) : 0;
   document.getElementById('metaBarFill').style.width = metaPct + '%';
-  document.getElementById('metaBarLabel').textContent = meta>0
-    ? `${money(recebido)} de ${money(meta)} (${Math.round(metaPct)}%)${recebido>=meta?' 🎉 meta batida!':''}`
-    : 'Defina uma meta pra acompanhar o progresso do mês.';
+  document.getElementById('dashMetaPct').textContent = meta>0 ? Math.round(metaPct)+'%' : '—';
+  document.getElementById('dashMetaHint').textContent = meta>0
+    ? `${money(recebido)} de ${money(meta)}${recebido>=meta?' 🎉':''}`
+    : 'defina em Cadastros';
 
-  renderEvolucaoFaturamento();
+  // Reservas do período (só o número — detalhe fica na Financeiro)
+  document.getElementById('dashReservasQtd').textContent = reservasMes.length;
+  document.getElementById('dashReservasHint').textContent = `${money(recebido)} recebido · ${money(aReceber)} a receber`;
 
-  const tbody = document.getElementById('finReservasTbody');
-  tbody.innerHTML = reservasMes.length ? reservasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
-    const cli = db.clientes.find(c=>c.id===r.clienteId);
-    const atrasada = r.pagamento!=='pago' && r.data < hojeStr;
-    const statusBadge = r.pagamento==='pago' ? '<span class="badge green">Pago</span>'
-      : atrasada ? '<span class="badge red">Atrasado</span>' : '<span class="badge amber">A receber</span>';
-    return `<tr>
-      <td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
-      <td>${cli?cli.nome:'—'}</td>
-      <td>${r.podcast||'—'}</td>
-      <td>${money(r.valor)}</td>
-      <td>${r.formaPagamento||'—'}</td>
-      <td>${statusBadge}</td>
-      <td class="dash-no-print" style="display:flex; gap:6px;">${r.pagamento!=='pago' ? `<button class="icon-btn" onclick="marcarPago('${r.id}')">Marcar pago</button><button class="icon-btn" onclick="cobrarCliente('${r.id}')">Cobrar</button>` : ''}</td>
-    </tr>`;
-  }).join('') : '<tr class="empty-row"><td colspan="7">Nenhuma reserva neste período.</td></tr>';
-
-  const comissoesPagas = despesasMes.filter(d=>d.categoria==='Salários/Comissões' && d.pago);
-  document.getElementById('dashComissoesPagasTbody').innerHTML = comissoesPagas.length ? comissoesPagas.map(d=>`
-    <tr><td>${d.descricao.replace(/^Comissão — /,'')}</td><td>${new Date(d.data+'T00:00:00').toLocaleDateString('pt-BR')}</td><td>${money(d.valor)}</td></tr>
-  `).join('') : '<tr class="empty-row"><td colspan="3">Nenhuma comissão paga neste período.</td></tr>';
-
+  // Despesas
   const despesasPagasTotal = despesasMes.filter(d=>d.pago).reduce((s,d)=>s+(d.valor||0),0);
-  const despesasAPagarTotal = despesasMes.filter(d=>!d.pago).reduce((s,d)=>s+(d.valor||0),0);
+  const despesasAPagarTotal = db.despesas.filter(d=>!d.pago).reduce((s,d)=>s+(d.valor||0),0);
   document.getElementById('dashDespesasPagas').textContent = money(despesasPagasTotal);
   document.getElementById('dashDespesasAPagar').textContent = money(despesasAPagarTotal);
 
+  renderEvolucaoFaturamento();
+  renderComissoesPagasChart();
   renderRankingClientes();
 }
 
@@ -1930,8 +1950,28 @@ function renderEvolucaoFaturamento(){
   container.innerHTML = meses.map(m=>`
     <div class="evo-bar-col">
       <div class="evo-bar-val">${m.recebido?money(m.recebido).replace('R$','').trim():'—'}</div>
-      <div class="evo-bar" style="height:${Math.max(4,(m.recebido/max)*120)}px;"></div>
+      <div class="evo-bar" style="height:${Math.max(4,(m.recebido/max)*50)}px;"></div>
       <div class="evo-bar-lbl">${m.label}</div>
+    </div>`).join('');
+}
+
+function renderComissoesPagasChart(){
+  const container = document.getElementById('comissoesPagasChart');
+  const ym = ymOf(finPeriod);
+  const pagas = db.despesas.filter(d=>d.categoria==='Salários/Comissões' && d.pago && d.data && d.data.startsWith(ym));
+  if(!pagas.length){ container.innerHTML = '<div class="evo-empty">Nenhuma comissão paga neste período.</div>'; return; }
+  const porComissionado = {};
+  pagas.forEach(d=>{
+    const nome = d.descricao.replace(/^Comissão — /,'').replace(/ \([^)]+\)$/,'');
+    porComissionado[nome] = (porComissionado[nome]||0) + (d.valor||0);
+  });
+  const entries = Object.entries(porComissionado);
+  const max = Math.max(...entries.map(([,v])=>v), 1);
+  container.innerHTML = entries.map(([nome,valor])=>`
+    <div class="evo-bar-col">
+      <div class="evo-bar-val">${money(valor).replace('R$','').trim()}</div>
+      <div class="evo-bar" style="height:${Math.max(4,(valor/max)*50)}px;"></div>
+      <div class="evo-bar-lbl" title="${nome}">${nome.split(' ')[0]}</div>
     </div>`).join('');
 }
 
@@ -2063,17 +2103,23 @@ function renderRankingClientes(){
   });
 
   const topGastadores = [...comTotais].filter(x=>x.total>0).sort((a,b)=>b.total-a.total).slice(0,5);
-  document.getElementById('finRankingTbody').innerHTML = topGastadores.length ? topGastadores.map(x=>`
-    <tr><td>${x.c.nome}</td><td>${x.qtd}</td><td>${money(x.ticketMedio)}</td><td class="col-valor" style="font-weight:700;">${money(x.total)}</td></tr>
-  `).join('') : '<tr class="empty-row"><td colspan="4">Nenhum cliente com gravação paga ainda.</td></tr>';
+  const finRankingTbody = document.getElementById('finRankingTbody');
+  if(finRankingTbody){
+    finRankingTbody.innerHTML = topGastadores.length ? topGastadores.map(x=>`
+      <tr onclick="verHistoricoCliente('${x.c.id}')" style="cursor:pointer;"><td>${x.c.nome}</td><td class="col-valor" style="font-weight:700; color:var(--gold);">${money(x.total)}</td></tr>
+    `).join('') : '<tr class="empty-row"><td colspan="2">Nenhum cliente com gravação paga ainda.</td></tr>';
+  }
 
   const hojeD = new Date();
   const inativos = comTotais.filter(x=>x.ultima).map(x=>({
     ...x, dias: Math.floor((hojeD - new Date(x.ultima+'T00:00:00')) / (1000*60*60*24))
   })).filter(x=>x.dias > 60).sort((a,b)=>b.dias-a.dias);
-  document.getElementById('finInativosTbody').innerHTML = inativos.length ? inativos.map(x=>`
-    <tr><td>${x.c.nome}</td><td>${new Date(x.ultima+'T00:00:00').toLocaleDateString('pt-BR')}</td><td>${x.dias} dias</td></tr>
-  `).join('') : '<tr class="empty-row"><td colspan="3">Nenhum cliente inativo há mais de 60 dias.</td></tr>';
+  const chipsEl = document.getElementById('inativosChips');
+  if(chipsEl){
+    chipsEl.innerHTML = inativos.length ? inativos.map(x=>
+      `<span class="chip" onclick="verHistoricoCliente('${x.c.id}')" title="Última gravação: ${new Date(x.ultima+'T00:00:00').toLocaleDateString('pt-BR')} (${x.dias} dias atrás)">${x.c.nome}</span>`
+    ).join('') : '<span class="hint">Ninguém sumido há mais de 60 dias 🎉</span>';
+  }
 }
 
 function marcarPago(reservaId){
