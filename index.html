@@ -225,7 +225,7 @@
   .view-panel{display:none;}
   .view-panel.on{display:block;}
 
-  .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:26px;}
+  .stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:16px; margin-bottom:26px;}
   .stat-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px;}
   .stat-card .lbl{font-size:11.5px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
   .stat-card .val{font-size:23px; font-weight:800;}
@@ -268,6 +268,12 @@
 
   .check-inline{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text-dim); font-weight:600; text-transform:none; letter-spacing:0;}
   .check-inline input{width:auto;}
+  .extra-add-row{display:flex; gap:6px; margin-bottom:8px;}
+  .extra-add-row input[type=text]{flex:1.4;}
+  .extra-add-row input[type=number]{flex:1;}
+  .extra-add-row button{flex-shrink:0;}
+  .extra-item{display:flex; justify-content:space-between; align-items:center; gap:8px; background:var(--card2); border:1px solid var(--border2); border-radius:8px; padding:8px 10px; margin-bottom:6px; font-size:12.5px;}
+  .valor-total-display{background:var(--card2); border:1px solid var(--gold-bg); border-radius:8px; padding:11px 12px; font-weight:800; color:var(--gold); font-size:16px;}
   .pix-box{margin-top:10px; background:var(--card2); border:1px solid var(--border2); border-radius:10px; padding:14px 16px;}
   .pix-box .row{display:flex; justify-content:space-between; gap:10px; font-size:13px; color:var(--text-dim); padding:5px 0;}
   .pix-box .row b{color:var(--gold); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.04em;}
@@ -275,6 +281,28 @@
   /* Agenda */
   .agenda-toolbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap;}
   .fin-period-bar{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap;}
+
+  .seg-toggle{display:flex; background:var(--card2); border:1px solid var(--border2); border-radius:8px; padding:3px;}
+  .seg-btn{padding:7px 14px; font-size:12.5px; font-weight:700; color:var(--text-dim); border-radius:6px;}
+  .seg-btn.active{background:var(--gold-bg); color:var(--gold);}
+
+  .week-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:10px; overflow-x:auto;}
+  .week-day{background:var(--card); border:1px solid var(--border); border-radius:12px; min-width:130px; overflow:hidden;}
+  .week-day-head{padding:10px 12px; border-bottom:1px solid var(--border); text-align:center;}
+  .week-day-head .dow{font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:var(--gold);}
+  .week-day-head .dnum{font-size:15px; font-weight:800; margin-top:2px;}
+  .week-day.is-today .week-day-head{background:var(--gold-bg);}
+  .week-slot{padding:9px 10px; font-size:11.5px; border-bottom:1px solid var(--border); cursor:pointer; color:var(--text-faint);}
+  .week-slot:last-child{border-bottom:none;}
+  .week-slot:hover{background:var(--card2);}
+  .week-slot.busy{color:var(--text); background:rgba(212,175,55,.06); cursor:default;}
+  .week-slot.busy:hover{background:rgba(212,175,55,.06);}
+  .week-slot .cli{font-weight:700; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .week-empty{padding:14px 10px; text-align:center; font-size:11px; color:var(--text-faint);}
+
+  .horarios-day{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .horarios-day label{min-width:80px; margin:0; text-transform:none; font-size:13px; color:var(--text);}
+  @media(max-width:600px){ .week-grid{grid-template-columns:repeat(7, minmax(120px,1fr));} }
   .day-nav{display:flex; align-items:center; gap:10px;}
   .day-nav .date-lbl{font-size:14.5px; font-weight:700; min-width:190px; text-align:center;}
   .slot-grid{display:flex; flex-direction:column; gap:8px;}
@@ -537,34 +565,32 @@
             <div class="date-lbl" id="agendaDateLbl"></div>
             <button class="icon-btn" onclick="agendaMove(1)">›</button>
           </div>
-          <button class="btn btn-outline" onclick="agendaToday()">Hoje</button>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <div class="seg-toggle">
+              <button class="seg-btn active" id="segDia" onclick="setAgendaModo('dia')">Dia</button>
+              <button class="seg-btn" id="segSemana" onclick="setAgendaModo('semana')">Semana</button>
+            </div>
+            <button class="btn btn-outline" onclick="agendaToday()">Hoje</button>
+            <button class="btn btn-outline" id="btnConfigHorarios" onclick="openHorariosModal()">⚙️ Horários</button>
+          </div>
         </div>
-        <div class="panel">
+        <div class="panel" id="painelDia">
           <div class="panel-body">
             <div class="slot-grid" id="slotGrid"></div>
           </div>
         </div>
+        <div class="week-grid" id="weekGrid" style="display:none;"></div>
       </div>
 
       <!-- CLIENTES -->
       <div class="view-panel on" id="view-clientes">
-        <div class="panel" style="margin-bottom:20px;">
-          <div class="panel-head">
-            <h3>Novo cliente</h3>
-          </div>
-          <div class="panel-body">
-            <div class="field-row">
-              <div class="field"><label>Nome</label><input type="text" id="cliNome" placeholder="Nome do cliente"></div>
-              <div class="field"><label>WhatsApp</label><input type="tel" id="cliWhats" placeholder="(21) 90000-0000"></div>
-            </div>
-            <div class="field"><label>Empresa / Podcast</label><input type="text" id="cliEmpresa" placeholder="Nome do podcast ou empresa"></div>
-            <button class="btn btn-gold" onclick="addCliente()">+ Adicionar cliente</button>
-          </div>
-        </div>
         <div class="panel">
-          <div class="panel-head"><h3>Todos os clientes</h3></div>
+          <div class="panel-head">
+            <h3>Todos os clientes</h3>
+            <button class="btn btn-gold" onclick="openClienteModal(null)">+ Novo cliente</button>
+          </div>
           <table>
-            <thead><tr><th>Nome</th><th>WhatsApp</th><th>Empresa/Podcast</th><th>Gravações</th><th class="col-valor">Total gasto</th><th></th></tr></thead>
+            <thead><tr><th>Nome</th><th>WhatsApp</th><th>Empresa/Podcast</th><th>Indicado por</th><th>Gravações</th><th class="col-valor">Total gasto</th><th></th></tr></thead>
             <tbody id="clientesTbody"></tbody>
           </table>
         </div>
@@ -573,6 +599,13 @@
       <!-- PRODUÇÃO -->
       <div class="view-panel" id="view-producao">
         <div class="kanban" id="kanban"></div>
+        <div class="panel" style="margin-top:20px;">
+          <div class="panel-head"><h3>Histórico de entregas</h3></div>
+          <table>
+            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th></tr></thead>
+            <tbody id="historicoEntregasBody"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- FINANCEIRO -->
@@ -588,6 +621,7 @@
         <div class="stat-row">
           <div class="stat-card"><div class="lbl">Recebido no período</div><div class="val green" id="finRecebido">R$ 0,00</div></div>
           <div class="stat-card"><div class="lbl">A receber</div><div class="val gold" id="finAReceber">R$ 0,00</div></div>
+          <div class="stat-card"><div class="lbl">Atrasado</div><div class="val red" id="finAtrasado">R$ 0,00</div><div class="hint" id="finAtrasadoQtd"></div></div>
           <div class="stat-card"><div class="lbl">Despesas do período</div><div class="val red" id="finDespesas">R$ 0,00</div></div>
           <div class="stat-card">
             <div class="lbl">Lucro líquido</div>
@@ -613,6 +647,7 @@
                   <option value="Marketing">Marketing</option>
                   <option value="Manutenção">Manutenção</option>
                   <option value="Salários/Comissões">Salários/Comissões</option>
+                  <option value="Imposto">Imposto</option>
                   <option value="Outros">Outros</option>
                 </select>
               </div>
@@ -625,7 +660,7 @@
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Reservas do período (recebido / a receber)</h3></div>
           <table>
-            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Forma</th><th>Status</th></tr></thead>
+            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Forma</th><th>Status</th><th></th></tr></thead>
             <tbody id="finReservasTbody"></tbody>
           </table>
         </div>
@@ -646,11 +681,26 @@
           </table>
         </div>
 
-        <div class="panel">
+        <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Despesas por categoria (período)</h3></div>
           <table>
             <thead><tr><th>Categoria</th><th>Total</th></tr></thead>
             <tbody id="finCategoriasTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Comissões de indicação (período)</h3>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label style="margin:0; text-transform:none; font-size:12px; color:var(--text-dim);">% comissão</label>
+              <input type="number" id="comissaoPctInput" step="0.5" style="width:70px;">
+              <button class="icon-btn" onclick="saveComissaoPct()">Salvar</button>
+            </div>
+          </div>
+          <table>
+            <thead><tr><th>Indicado por</th><th>Reservas pagas</th><th>Base (recebido)</th><th>Comissão</th></tr></thead>
+            <tbody id="finComissoesTbody"></tbody>
           </table>
         </div>
       </div>
@@ -683,6 +733,58 @@
   </div>
 </div>
 
+<!-- MODAL: Configurar horários -->
+<div class="modal-bg" id="modalHorarios">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-head">
+      <h3>Configurar horários da sala</h3>
+      <button onclick="closeModal('modalHorarios')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="contact-note" style="margin-bottom:16px;">Um horário por dia da semana, separados por vírgula (ex: 08:00, 09:30, 11:00). Deixe em branco pra fechar o dia. Vale pra toda semana — não dá pra editar uma data específica.</p>
+      <div id="horariosForm"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('modalHorarios')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveHorarios()">Salvar horários</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Cliente -->
+<div class="modal-bg" id="modalCliente">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalClienteTitle">Novo cliente</h3>
+      <button onclick="closeModal('modalCliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>Nome</label><input type="text" id="cliNome" placeholder="Nome do cliente"></div>
+        <div class="field"><label>WhatsApp</label><input type="tel" id="cliWhats" placeholder="(21) 90000-0000"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Empresa / Podcast</label><input type="text" id="cliEmpresa" placeholder="Nome do podcast ou empresa"></div>
+        <div class="field"><label>E-mail</label><input type="text" id="cliEmail" placeholder="nome@email.com"></div>
+      </div>
+      <div class="field"><label>Endereço completo</label><input type="text" id="cliEndereco" placeholder="Rua, número, bairro, cidade — CEP"></div>
+      <div class="field-row">
+        <div class="field"><label>CPF/CNPJ</label><input type="text" id="cliDocumento" placeholder="Opcional"></div>
+        <div class="field"><label>Instagram</label><input type="text" id="cliInstagram" placeholder="@perfil"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Aniversário</label><input type="date" id="cliAniversario"></div>
+        <div class="field"><label>Indicado por</label><input type="text" id="cliIndicadoPor" placeholder="Quem trouxe esse cliente (opcional)"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="icon-btn" id="cliDeleteBtn" style="display:none;color:var(--red);" onclick="deleteClienteCurrent()">Remover</button>
+      <button class="btn btn-outline" onclick="closeModal('modalCliente')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: Reserva -->
 <div class="modal-bg" id="modalReserva">
   <div class="modal">
@@ -701,11 +803,25 @@
         <div class="field"><label>Duração (min)</label><input type="number" id="resDuracao" value="90" step="15"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Valor (R$)</label><input type="number" id="resValor" placeholder="0,00" step="0.01"></div>
+        <div class="field"><label>Valor da sala (R$)</label><input type="number" id="resValorBase" placeholder="0,00" step="0.01" oninput="recalcTotal()"></div>
         <div class="field">
           <label>Status</label>
           <select id="resPagamento"><option value="pendente">A receber</option><option value="pago">Pago</option></select>
         </div>
+      </div>
+      <div class="field">
+        <label>Itens extras (bebida, buffet, hora extra, desconto...)</label>
+        <div class="extra-add-row">
+          <input type="text" id="extraDesc" placeholder="Ex: Buffet">
+          <input type="number" id="extraValor" placeholder="valor" step="0.01">
+          <button type="button" class="icon-btn" onclick="addExtraItem()">+ Add</button>
+        </div>
+        <div id="extrasList"></div>
+        <p class="contact-note" style="margin-top:6px;">Valor negativo = desconto (ex: -50).</p>
+      </div>
+      <div class="field">
+        <label>Valor total</label>
+        <div id="resValorTotalDisplay" class="valor-total-display">R$ 0,00</div>
       </div>
       <div class="field">
         <label>Forma de pagamento</label>
@@ -746,12 +862,25 @@
    ============================================================ */
 const DB_KEY = 'eps_data_v1';
 
+const DIAS_SEMANA = ['dom','seg','ter','qua','qui','sex','sab'];
+const DIAS_SEMANA_LBL = {dom:'Domingo', seg:'Segunda', ter:'Terça', qua:'Quarta', qui:'Quinta', sex:'Sexta', sab:'Sábado'};
+function horariosPadrao(){
+  // 15:30 e 18:30 ficam de fora por padrão — são os horários "quebrados" no espaço físico
+  const uteis = ['08:00','09:30','11:00','12:30','14:00','17:00','20:00'];
+  return { dom:[], seg:[...uteis], ter:[...uteis], qua:[...uteis], qui:[...uteis], sex:[...uteis], sab:[...uteis] };
+}
 function loadDB(){
   try{
     const raw = localStorage.getItem(DB_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(!parsed.horarios) parsed.horarios = horariosPadrao();
+      if(!parsed.config) parsed.config = { comissaoPct: 10 };
+      if(parsed.config.comissaoPct === undefined) parsed.config.comissaoPct = 10;
+      return parsed;
+    }
   }catch(e){}
-  return { clientes: [], reservas: [], despesas: [] };
+  return { clientes: [], reservas: [], despesas: [], horarios: horariosPadrao(), config: { comissaoPct: 10 } };
 }
 function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
 
@@ -801,6 +930,7 @@ function applyRolePermissions(){
   const isAdmin = role === 'admin';
   document.getElementById('currentRoleLbl').textContent = ROLE_LABELS[role];
   document.querySelector('.nav-item[data-view="financeiro"]').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnConfigHorarios').style.display = isAdmin ? '' : 'none';
   document.body.classList.toggle('role-operador', !isAdmin);
   if(!isAdmin && document.getElementById('view-financeiro').classList.contains('on')){
     activateView('clientes');
@@ -858,8 +988,7 @@ function togglePixInfo(){
   if(show){
     document.getElementById('pixKeyDisplay').textContent = PIX_KEY || 'Ainda não configurada';
     document.getElementById('pixNomeDisplay').textContent = PIX_NOME;
-    const valor = Number(document.getElementById('resValor').value) || 0;
-    document.getElementById('pixValorDisplay').textContent = money(valor);
+    document.getElementById('pixValorDisplay').textContent = money(recalcTotal());
   }
 }
 function copyPixKey(){
@@ -890,26 +1019,77 @@ function closeModal(id){ document.getElementById(id).classList.remove('on'); }
 function money(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 
 /* ---------- AGENDA ---------- */
-const HORARIOS = ['08:00','09:30','11:00','12:30','14:00','15:30','17:00','18:30','20:00'];
 let agendaDate = new Date();
+let agendaModo = 'dia'; // 'dia' | 'semana'
 
 function fmtDate(d){ return d.toISOString().slice(0,10); }
 function fmtDateLbl(d){
   return d.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long'});
 }
-function agendaMove(delta){ agendaDate.setDate(agendaDate.getDate()+delta); renderAgenda(); }
+function diaKey(d){ return DIAS_SEMANA[d.getDay()]; }
+function horariosDoDia(d){ return db.horarios[diaKey(d)] || []; }
+
+function agendaMove(delta){
+  agendaDate.setDate(agendaDate.getDate() + delta*(agendaModo==='semana'?7:1));
+  renderAgenda();
+}
 function agendaToday(){ agendaDate = new Date(); renderAgenda(); }
 
+function setAgendaModo(modo){
+  agendaModo = modo;
+  document.getElementById('segDia').classList.toggle('active', modo==='dia');
+  document.getElementById('segSemana').classList.toggle('active', modo==='semana');
+  document.getElementById('painelDia').style.display = modo==='dia' ? '' : 'none';
+  document.getElementById('weekGrid').style.display = modo==='semana' ? 'grid' : 'none';
+  renderAgenda();
+}
+
 let currentReservaId = null;
+let resExtras = [];
+
+function recalcTotal(){
+  const base = Number(document.getElementById('resValorBase').value) || 0;
+  const extrasTotal = resExtras.reduce((s,e)=>s+(e.valor||0),0);
+  const total = base + extrasTotal;
+  document.getElementById('resValorTotalDisplay').textContent = money(total);
+  return total;
+}
+function renderExtrasList(){
+  document.getElementById('extrasList').innerHTML = resExtras.map((e,i)=>`
+    <div class="extra-item"><span>${e.desc} <b style="color:${e.valor<0?'var(--red)':'var(--text)'};">${money(e.valor)}</b></span><button type="button" class="icon-btn" onclick="removeExtraItem(${i})">Remover</button></div>
+  `).join('');
+  recalcTotal();
+}
+function addExtraItem(){
+  const desc = document.getElementById('extraDesc').value.trim();
+  const valor = Number(document.getElementById('extraValor').value);
+  if(!desc || !valor){ alert('Preencha descrição e valor do item.'); return; }
+  resExtras.push({desc, valor});
+  document.getElementById('extraDesc').value = '';
+  document.getElementById('extraValor').value = '';
+  renderExtrasList();
+}
+function removeExtraItem(i){ resExtras.splice(i,1); renderExtrasList(); }
 
 function renderAgenda(){
+  if(agendaModo==='semana'){
+    document.getElementById('agendaDateLbl').textContent = 'Semana';
+    renderAgendaWeek();
+    return;
+  }
   document.getElementById('agendaDateLbl').textContent = fmtDateLbl(agendaDate);
   const dateStr = fmtDate(agendaDate);
   const grid = document.getElementById('slotGrid');
   grid.innerHTML = '';
   const dayReservas = db.reservas.filter(r=>r.data===dateStr);
+  const horarios = horariosDoDia(agendaDate);
 
-  HORARIOS.forEach(hora=>{
+  if(!horarios.length){
+    grid.innerHTML = `<div class="week-empty" style="padding:30px 10px;">Sala fechada neste dia. <button class="icon-btn" onclick="openHorariosModal()" style="margin-left:6px;">Configurar horários</button></div>`;
+    return;
+  }
+
+  horarios.forEach(hora=>{
     const reserva = dayReservas.find(r=>r.hora===hora);
     const slot = document.createElement('div');
     if(reserva){
@@ -928,6 +1108,59 @@ function renderAgenda(){
   });
 }
 
+function renderAgendaWeek(){
+  const week = document.getElementById('weekGrid');
+  // acha o domingo da semana de agendaDate
+  const start = new Date(agendaDate);
+  start.setDate(start.getDate() - start.getDay());
+  const hojeStr = fmtDate(new Date());
+
+  let html = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const dateStr = fmtDate(d);
+    const horarios = horariosDoDia(d);
+    const dayReservas = db.reservas.filter(r=>r.data===dateStr);
+    html += `<div class="week-day ${dateStr===hojeStr?'is-today':''}">
+      <div class="week-day-head"><div class="dow">${DIAS_SEMANA_LBL[diaKey(d)]}</div><div class="dnum">${d.getDate()}/${d.getMonth()+1}</div></div>`;
+    if(!horarios.length){
+      html += `<div class="week-empty">Fechado</div>`;
+    } else {
+      horarios.forEach(hora=>{
+        const reserva = dayReservas.find(r=>r.hora===hora);
+        if(reserva){
+          const cli = db.clientes.find(c=>c.id===reserva.clienteId);
+          html += `<div class="week-slot busy" onclick="openReservaModal('${dateStr}','${hora}','${reserva.id}')">${hora} <span class="cli">${cli?cli.nome:'—'}</span></div>`;
+        } else {
+          html += `<div class="week-slot" onclick="openReservaModal('${dateStr}','${hora}',null)">${hora} livre</div>`;
+        }
+      });
+    }
+    html += `</div>`;
+  }
+  week.innerHTML = html;
+}
+
+/* ---------- Configuração de horários ---------- */
+function openHorariosModal(){
+  const form = document.getElementById('horariosForm');
+  form.innerHTML = DIAS_SEMANA.map(k=>`
+    <div class="horarios-day">
+      <label>${DIAS_SEMANA_LBL[k]}</label>
+      <input type="text" id="hor-${k}" value="${(db.horarios[k]||[]).join(', ')}" placeholder="Fechado">
+    </div>`).join('');
+  document.getElementById('modalHorarios').classList.add('on');
+}
+function saveHorarios(){
+  DIAS_SEMANA.forEach(k=>{
+    const raw = document.getElementById('hor-'+k).value;
+    db.horarios[k] = raw.split(',').map(s=>s.trim()).filter(Boolean).sort();
+  });
+  saveDB();
+  closeModal('modalHorarios');
+  renderAgenda();
+}
+
 function openReservaModal(dateStr, hora, reservaId){
   currentReservaId = reservaId;
   const sel = document.getElementById('resCliente');
@@ -942,7 +1175,8 @@ function openReservaModal(dateStr, hora, reservaId){
     document.getElementById('resPodcast').value = r.podcast||'';
     document.getElementById('resHora').value = r.hora;
     document.getElementById('resDuracao').value = r.duracao;
-    document.getElementById('resValor').value = r.valor;
+    document.getElementById('resValorBase').value = r.valorBase ?? r.valor;
+    resExtras = r.extras ? JSON.parse(JSON.stringify(r.extras)) : [];
     document.getElementById('resPagamento').value = r.pagamento;
     document.getElementById('resFormaPagamento').value = r.formaPagamento||'';
     document.getElementById('resObs').value = r.obs||'';
@@ -952,12 +1186,14 @@ function openReservaModal(dateStr, hora, reservaId){
     document.getElementById('resPodcast').value = '';
     document.getElementById('resHora').value = hora;
     document.getElementById('resDuracao').value = 90;
-    document.getElementById('resValor').value = '';
+    document.getElementById('resValorBase').value = '';
+    resExtras = [];
     document.getElementById('resPagamento').value = 'pendente';
     document.getElementById('resFormaPagamento').value = '';
     document.getElementById('resObs').value = '';
     document.getElementById('resDeleteBtn').style.display = 'none';
   }
+  renderExtrasList();
   document.getElementById('pixInfoBox').style.display = 'none';
   document.getElementById('modalReserva').dataset.date = dateStr;
   document.getElementById('modalReserva').classList.add('on');
@@ -967,13 +1203,16 @@ function saveReserva(){
   const clienteId = document.getElementById('resCliente').value;
   if(!clienteId){ alert('Cadastre e selecione um cliente.'); return; }
   const dateStr = document.getElementById('modalReserva').dataset.date;
+  const valorBase = Number(document.getElementById('resValorBase').value) || 0;
   const data = {
     clienteId,
     podcast: document.getElementById('resPodcast').value.trim(),
     data: dateStr,
     hora: document.getElementById('resHora').value,
     duracao: Number(document.getElementById('resDuracao').value)||90,
-    valor: Number(document.getElementById('resValor').value)||0,
+    valorBase,
+    extras: [...resExtras],
+    valor: recalcTotal(),
     pagamento: document.getElementById('resPagamento').value,
     formaPagamento: document.getElementById('resFormaPagamento').value,
     obs: document.getElementById('resObs').value.trim(),
@@ -999,67 +1238,96 @@ function deleteReservaCurrent(){
 }
 
 /* ---------- CLIENTES ---------- */
-function addCliente(){
+let currentClienteId = null;
+
+function openClienteModal(id){
+  currentClienteId = id;
+  const c = id ? db.clientes.find(x=>x.id===id) : null;
+  document.getElementById('modalClienteTitle').textContent = c ? 'Editar cliente' : 'Novo cliente';
+  document.getElementById('cliNome').value = c?.nome || '';
+  document.getElementById('cliWhats').value = c?.whatsapp || '';
+  document.getElementById('cliEmpresa').value = c?.empresa || '';
+  document.getElementById('cliEmail').value = c?.email || '';
+  document.getElementById('cliEndereco').value = c?.endereco || '';
+  document.getElementById('cliDocumento').value = c?.documento || '';
+  document.getElementById('cliInstagram').value = c?.instagram || '';
+  document.getElementById('cliAniversario').value = c?.aniversario || '';
+  document.getElementById('cliIndicadoPor').value = c?.indicadoPor || '';
+  document.getElementById('cliDeleteBtn').style.display = c ? 'inline-block' : 'none';
+  document.getElementById('modalCliente').classList.add('on');
+}
+
+function saveCliente(){
   const nome = document.getElementById('cliNome').value.trim();
   if(!nome){ alert('Informe o nome do cliente.'); return; }
-  db.clientes.push({
-    id: uid(),
+  const data = {
     nome,
     whatsapp: document.getElementById('cliWhats').value.trim(),
     empresa: document.getElementById('cliEmpresa').value.trim(),
-    criadoEm: new Date().toISOString()
-  });
+    email: document.getElementById('cliEmail').value.trim(),
+    endereco: document.getElementById('cliEndereco').value.trim(),
+    documento: document.getElementById('cliDocumento').value.trim(),
+    instagram: document.getElementById('cliInstagram').value.trim(),
+    aniversario: document.getElementById('cliAniversario').value,
+    indicadoPor: document.getElementById('cliIndicadoPor').value.trim(),
+  };
+  if(currentClienteId){
+    Object.assign(db.clientes.find(c=>c.id===currentClienteId), data);
+  } else {
+    db.clientes.push(Object.assign({id:uid(), criadoEm:new Date().toISOString()}, data));
+  }
   saveDB();
-  document.getElementById('cliNome').value='';
-  document.getElementById('cliWhats').value='';
-  document.getElementById('cliEmpresa').value='';
+  closeModal('modalCliente');
   renderClientes();
 }
 
-function deleteCliente(id){
+function deleteClienteCurrent(){
+  if(!currentClienteId) return;
   if(!confirm('Remover cliente? As reservas associadas continuam no histórico.')) return;
-  db.clientes = db.clientes.filter(c=>c.id!==id);
+  db.clientes = db.clientes.filter(c=>c.id!==currentClienteId);
   saveDB();
+  closeModal('modalCliente');
   renderClientes();
 }
 
 function renderClientes(){
   const tbody = document.getElementById('clientesTbody');
   if(!db.clientes.length){
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum cliente cadastrado ainda.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum cliente cadastrado ainda.</td></tr>';
     return;
   }
   tbody.innerHTML = db.clientes.map(c=>{
     const reservas = db.reservas.filter(r=>r.clienteId===c.id);
     const totalGasto = reservas.reduce((s,r)=>s+(r.valor||0),0);
-    return `<tr>
+    return `<tr onclick="openClienteModal('${c.id}')" style="cursor:pointer;">
       <td><b>${c.nome}</b></td>
       <td>${c.whatsapp||'—'}</td>
       <td>${c.empresa||'—'}</td>
+      <td>${c.indicadoPor||'—'}</td>
       <td>${reservas.length}</td>
       <td class="col-valor">${money(totalGasto)}</td>
-      <td><button class="icon-btn" onclick="deleteCliente('${c.id}')">Remover</button></td>
+      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openClienteModal('${c.id}')">Editar</button></td>
     </tr>`;
   }).join('');
 }
 
 /* ---------- PRODUÇÃO (kanban) ---------- */
 const ETAPAS = ['Agendado','Gravado','Em edição','Pronto','Entregue'];
+const ETAPAS_KANBAN = ETAPAS.slice(0,4); // "Entregue" não fica no quadro — vira histórico terminal
 function renderKanban(){
   const kanban = document.getElementById('kanban');
-  const hoje = fmtDate(new Date());
-  kanban.innerHTML = ETAPAS.map(etapa=>{
-    const items = db.reservas.filter(r=>r.status===etapa && r.data<= new Date(Date.now()+1000*60*60*24*365).toISOString().slice(0,10));
+  kanban.innerHTML = ETAPAS_KANBAN.map(etapa=>{
     const cards = db.reservas.filter(r=>r.status===etapa).sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
       const cli = db.clientes.find(c=>c.id===r.clienteId);
       const idx = ETAPAS.indexOf(etapa);
-      const prev = ETAPAS[idx-1], next = ETAPAS[idx+1];
+      const prev = idx>0 ? ETAPAS[idx-1] : null;
+      const next = ETAPAS[idx+1];
       return `<div class="kcard">
         <div class="cli">${cli?cli.nome:'—'}</div>
         <div class="pod">${r.podcast||'Sem título'} · ${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</div>
         <div class="mv">
           ${prev?`<button class="icon-btn" onclick="moveEtapa('${r.id}','${prev}')">← ${prev}</button>`:''}
-          ${next?`<button class="icon-btn" onclick="moveEtapa('${r.id}','${next}')">${next} →</button>`:''}
+          <button class="icon-btn" onclick="moveEtapa('${r.id}','${next}')">${next==='Entregue'?'Entregar ✓':next+' →'}</button>
         </div>
       </div>`;
     }).join('');
@@ -1068,6 +1336,15 @@ function renderKanban(){
       <div class="kanban-col-body">${cards || '<div style="padding:16px;text-align:center;color:var(--text-faint);font-size:12px;">Vazio</div>'}</div>
     </div>`;
   }).join('');
+  renderHistoricoEntregas();
+}
+function renderHistoricoEntregas(){
+  const tbody = document.getElementById('historicoEntregasBody');
+  const entregues = db.reservas.filter(r=>r.status==='Entregue').sort((a,b)=>b.data.localeCompare(a.data));
+  tbody.innerHTML = entregues.length ? entregues.map(r=>{
+    const cli = db.clientes.find(c=>c.id===r.clienteId);
+    return `<tr><td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td><td>${cli?cli.nome:'—'}</td><td>${r.podcast||'—'}</td></tr>`;
+  }).join('') : '<tr class="empty-row"><td colspan="3">Nada entregue ainda.</td></tr>';
 }
 function moveEtapa(reservaId, novaEtapa){
   const r = db.reservas.find(x=>x.id===reservaId);
@@ -1128,6 +1405,12 @@ function renderFinanceiro(){
   const despesasTotal = pagasMes.reduce((s,d)=>s+(d.valor||0),0);
   const lucro = recebido - despesasTotal;
 
+  const hojeStr = fmtDate(new Date());
+  const atrasados = db.reservas.filter(r=>r.pagamento!=='pago' && r.data < hojeStr);
+  const atrasadoTotal = atrasados.reduce((s,r)=>s+(r.valor||0),0);
+  document.getElementById('finAtrasado').textContent = money(atrasadoTotal);
+  document.getElementById('finAtrasadoQtd').textContent = atrasados.length ? `${atrasados.length} reserva${atrasados.length>1?'s':''} — cobrar!` : 'nenhuma 🎉';
+
   document.getElementById('finRecebido').textContent = money(recebido);
   document.getElementById('finAReceber').textContent = money(aReceber);
   document.getElementById('finDespesas').textContent = money(despesasTotal);
@@ -1153,15 +1436,19 @@ function renderFinanceiro(){
   const tbody = document.getElementById('finReservasTbody');
   tbody.innerHTML = reservasMes.length ? reservasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
     const cli = db.clientes.find(c=>c.id===r.clienteId);
+    const atrasada = r.pagamento!=='pago' && r.data < hojeStr;
+    const statusBadge = r.pagamento==='pago' ? '<span class="badge green">Pago</span>'
+      : atrasada ? '<span class="badge red">Atrasado</span>' : '<span class="badge amber">A receber</span>';
     return `<tr>
       <td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
       <td>${cli?cli.nome:'—'}</td>
       <td>${r.podcast||'—'}</td>
       <td>${money(r.valor)}</td>
       <td>${r.formaPagamento||'—'}</td>
-      <td><span class="badge ${r.pagamento==='pago'?'green':'amber'}">${r.pagamento==='pago'?'Pago':'A receber'}</span></td>
+      <td>${statusBadge}</td>
+      <td>${r.pagamento!=='pago' ? `<button class="icon-btn" onclick="cobrarCliente('${r.id}')">Cobrar</button>` : ''}</td>
     </tr>`;
-  }).join('') : '<tr class="empty-row"><td colspan="6">Nenhuma reserva neste período.</td></tr>';
+  }).join('') : '<tr class="empty-row"><td colspan="7">Nenhuma reserva neste período.</td></tr>';
 
   const tbodyAPagar = document.getElementById('finAPagarTbody');
   tbodyAPagar.innerHTML = aPagarMes.length ? aPagarMes.sort((a,b)=>a.data.localeCompare(b.data)).map(d=>`
@@ -1188,6 +1475,40 @@ function renderFinanceiro(){
   const catRows = Object.entries(porCategoria).sort((a,b)=>b[1]-a[1]);
   document.getElementById('finCategoriasTbody').innerHTML = catRows.length ? catRows.map(([cat,total])=>`
     <tr><td>${cat}</td><td>${money(total)}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="2">Nenhuma despesa neste período.</td></tr>';
+
+  // Comissões de indicação
+  const pctComissao = db.config.comissaoPct || 0;
+  document.getElementById('comissaoPctInput').value = pctComissao;
+  const porIndicador = {};
+  reservasMes.filter(r=>r.pagamento==='pago').forEach(r=>{
+    const cli = db.clientes.find(c=>c.id===r.clienteId);
+    const ind = cli && cli.indicadoPor ? cli.indicadoPor.trim() : '';
+    if(!ind) return;
+    if(!porIndicador[ind]) porIndicador[ind] = {count:0, total:0};
+    porIndicador[ind].count++;
+    porIndicador[ind].total += (r.valor||0);
+  });
+  const comissaoRows = Object.entries(porIndicador);
+  document.getElementById('finComissoesTbody').innerHTML = comissaoRows.length ? comissaoRows.map(([ind,v])=>`
+    <tr><td>${ind}</td><td>${v.count}</td><td>${money(v.total)}</td><td class="col-valor" style="color:var(--gold); font-weight:700;">${money(v.total*pctComissao/100)}</td></tr>
+  `).join('') : '<tr class="empty-row"><td colspan="4">Nenhuma reserva paga de cliente indicado neste período.</td></tr>';
+}
+
+function saveComissaoPct(){
+  db.config.comissaoPct = Number(document.getElementById('comissaoPctInput').value) || 0;
+  saveDB();
+  renderFinanceiro();
+}
+
+function cobrarCliente(reservaId){
+  const r = db.reservas.find(x=>x.id===reservaId);
+  if(!r) return;
+  const cli = db.clientes.find(c=>c.id===r.clienteId);
+  if(!cli || !cli.whatsapp){ alert('Esse cliente não tem WhatsApp cadastrado — edite o cliente pra adicionar.'); return; }
+  const digits = cli.whatsapp.replace(/\D/g,'');
+  const phone = digits.length<=11 ? '55'+digits : digits;
+  const msg = `Olá, ${cli.nome}! Passando pra lembrar do pagamento da gravação de ${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')} (${money(r.valor)}). Pode confirmar quando conseguir? Obrigado!`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function renderAll(){
