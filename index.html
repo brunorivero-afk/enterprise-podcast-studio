@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise Podcast Studio | Estúdio para Podcast na Barra da Tijuca</title>
+<meta name="description" content="Estúdio de gravação de podcast na Barra da Tijuca, Rio de Janeiro. Equipamento moderno, estúdio preparado e edição profissional. Sócia Camila Rodrigues.">
+<link rel="icon" href="assets/logo.jpeg">
+<style>
+  :root{
+    --bg:#0a0a0a; --panel:#111111; --card:#161616; --card2:#1c1c1c;
+    --border:rgba(255,255,255,.08); --border2:rgba(255,255,255,.14);
+    --text:#f3f0e9; --text-dim:#a8a29a; --text-faint:#6b655c;
+    --gold:#d4af37; --gold-dim:#b8941f; --gold-bg:rgba(212,175,55,.12);
+    --silver:#c9c9c9;
+    --green:#3ecf8e; --green-bg:rgba(62,207,142,.12);
+    --red:#e6584f; --red-bg:rgba(230,88,79,.12);
+    --amber:#e6a23c; --amber-bg:rgba(230,162,60,.12);
+    --blue:#4f9de6; --blue-bg:rgba(79,157,230,.12);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit; text-decoration:none;}
+  img{max-width:100%; display:block;}
+  input,select,textarea,button{font-family:inherit; color:inherit;}
+  button{cursor:pointer;}
+  ::selection{background:var(--gold-bg); color:var(--gold);}
+
+  /* ============ SITE PÚBLICO ============ */
+  .site-header{
+    position:sticky; top:0; z-index:50; background:rgba(10,10,10,.9); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .site-header .wrap{
+    max-width:1180px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; gap:20px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand img{width:40px; height:40px; border-radius:50%; object-fit:cover;}
+  .brand .name{font-weight:700; font-size:15px; letter-spacing:.02em;}
+  .brand .name small{display:block; font-size:10.5px; color:var(--gold); font-weight:600; letter-spacing:.08em; text-transform:uppercase;}
+  .site-nav{display:flex; align-items:center; gap:28px;}
+  .site-nav a{font-size:13.5px; color:var(--text-dim); font-weight:600; transition:color .15s;}
+  .site-nav a:hover{color:var(--gold);}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:11px 20px; border-radius:8px; font-size:13.5px;
+    font-weight:700; border:1px solid transparent; transition:all .15s; white-space:nowrap;
+  }
+  .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-dim)); color:#1a1400;}
+  .btn-gold:hover{filter:brightness(1.08); transform:translateY(-1px);}
+  .btn-outline{border-color:var(--border2); color:var(--text);}
+  .btn-outline:hover{border-color:var(--gold); color:var(--gold);}
+  .btn-ghost{color:var(--text-dim); font-size:13px; font-weight:600;}
+  .btn-ghost:hover{color:var(--gold);}
+  .nav-toggle{display:none; background:none; border:none; color:var(--text); font-size:22px;}
+
+  section{padding:100px 24px;}
+  .wrap-narrow{max-width:1180px; margin:0 auto;}
+  .eyebrow{
+    display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:14px;
+  }
+  h1{font-size:52px; font-weight:800; line-height:1.12; letter-spacing:-.01em; margin-bottom:20px;}
+  h2{font-size:34px; font-weight:800; line-height:1.2; margin-bottom:14px;}
+  .lead{font-size:17px; color:var(--text-dim); line-height:1.65; max-width:560px;}
+
+  .hero{
+    padding-top:80px; padding-bottom:80px;
+    background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,175,55,.14), transparent);
+  }
+  .hero .wrap-narrow{display:grid; grid-template-columns:1.15fr .85fr; gap:60px; align-items:center;}
+  .hero-actions{display:flex; gap:14px; margin-top:32px; flex-wrap:wrap;}
+  .hero-media{
+    position:relative; border-radius:20px; overflow:hidden; border:1px solid var(--border2);
+    background:var(--card); aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 30px 80px -20px rgba(212,175,55,.15);
+  }
+  .hero-media img{width:78%; height:78%; object-fit:contain;}
+  .hero-stats{display:flex; gap:32px; margin-top:40px; flex-wrap:wrap;}
+  .hero-stats div b{display:block; font-size:26px; font-weight:800; color:var(--gold);}
+  .hero-stats div span{font-size:12px; color:var(--text-faint); font-weight:600;}
+
+  .section-alt{background:var(--panel); border-top:1px solid var(--border); border-bottom:1px solid var(--border);}
+  .center{text-align:center;}
+  .center .lead{margin-left:auto; margin-right:auto;}
+
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:48px;}
+  .feature-card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px; padding:32px 26px;
+    transition:border-color .2s, transform .2s;
+  }
+  .feature-card:hover{border-color:var(--gold-bg); transform:translateY(-3px);}
+  .feature-card .ic{
+    width:48px; height:48px; border-radius:12px; background:var(--gold-bg); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:18px;
+  }
+  .feature-card h3{font-size:16.5px; font-weight:700; margin-bottom:8px;}
+  .feature-card p{font-size:13.5px; color:var(--text-dim); line-height:1.6;}
+
+  .about-grid{display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; margin-top:20px;}
+  .about-grid ul{margin-top:22px; display:flex; flex-direction:column; gap:14px;}
+  .about-grid li{display:flex; gap:12px; font-size:14.5px; color:var(--text-dim); line-height:1.5;}
+  .about-grid li b{color:var(--text);}
+  .check{
+    flex-shrink:0; width:20px; height:20px; border-radius:50%; background:var(--gold-bg); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-size:12px; margin-top:1px;
+  }
+  .address-card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px; padding:26px; margin-top:20px;
+  }
+  .address-card .row{display:flex; gap:12px; font-size:13.5px; color:var(--text-dim); margin-bottom:10px;}
+  .address-card .row:last-child{margin-bottom:0;}
+  .address-card .row b{color:var(--text); display:block; font-size:11px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:3px; font-weight:700; color:var(--gold);}
+
+  .star-section{
+    background:linear-gradient(135deg, rgba(212,175,55,.08), transparent 60%);
+  }
+  .star-grid{display:grid; grid-template-columns:.8fr 1.2fr; gap:56px; align-items:center;}
+  .star-photo{
+    aspect-ratio:4/5; border-radius:20px; background:var(--card); border:1px solid var(--border2);
+    display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative;
+  }
+  .star-photo .ph{font-size:80px; color:var(--gold); opacity:.35;}
+  .star-badge{
+    position:absolute; bottom:16px; left:16px; right:16px; background:rgba(10,10,10,.85); backdrop-filter:blur(6px);
+    border:1px solid var(--gold-bg); border-radius:12px; padding:12px 14px; text-align:center;
+  }
+  .star-badge b{color:var(--gold); font-size:12px; letter-spacing:.06em; text-transform:uppercase;}
+  .star-quote{font-size:20px; font-weight:600; line-height:1.5; color:var(--text); font-style:italic; margin-bottom:18px;}
+
+  .cta-band{
+    background:linear-gradient(135deg,#161305,#0a0a0a); border-top:1px solid var(--gold-bg); border-bottom:1px solid var(--gold-bg);
+    text-align:center;
+  }
+  .cta-band h2{margin-bottom:10px;}
+  .cta-band .btn{margin-top:28px;}
+
+  .site-footer{padding:56px 24px 28px; border-top:1px solid var(--border);}
+  .footer-grid{max-width:1180px; margin:0 auto; display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:40px;}
+  .footer-grid h4{font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); margin-bottom:16px;}
+  .footer-grid p, .footer-grid a{font-size:13.5px; color:var(--text-dim); line-height:1.8; display:block;}
+  .footer-grid a:hover{color:var(--gold);}
+  .footer-bottom{
+    max-width:1180px; margin:36px auto 0; padding-top:24px; border-top:1px solid var(--border);
+    font-size:12px; color:var(--text-faint); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+
+  @media(max-width:920px){
+    .site-nav{display:none;}
+    .nav-toggle{display:block;}
+    .hero .wrap-narrow, .about-grid, .star-grid{grid-template-columns:1fr; gap:36px;}
+    .hero-media{order:-1; max-width:320px; margin:0 auto;}
+    h1{font-size:36px;} h2{font-size:26px;}
+    .grid-3{grid-template-columns:1fr;}
+    section{padding:64px 20px;}
+    .footer-grid{grid-template-columns:1fr; gap:28px;}
+  }
+
+  /* ============ APP INTERNO ============ */
+  #app{display:none; min-height:100vh; background:var(--bg);}
+  #app.on{display:flex;}
+  .side{
+    width:230px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:20px 14px; position:sticky; top:0; height:100vh;
+  }
+  .side-logo{display:flex; align-items:center; gap:10px; padding:6px 8px 22px;}
+  .side-logo img{width:34px; height:34px; border-radius:50%; object-fit:cover;}
+  .side-logo .txt{font-size:13px; font-weight:700; line-height:1.25;}
+  .side-logo .txt small{display:block; font-size:10px; color:var(--text-faint); font-weight:500;}
+  .nav-item{
+    display:flex; align-items:center; gap:10px; padding:11px 12px; border-radius:9px; margin-bottom:3px;
+    font-size:13.5px; font-weight:600; color:var(--text-dim); cursor:pointer; transition:background .15s,color .15s;
+    background:none; border:none; width:100%; text-align:left;
+  }
+  .nav-item .ic{width:18px; text-align:center;}
+  .nav-item:hover{background:var(--card); color:var(--text);}
+  .nav-item.active{background:var(--gold-bg); color:var(--gold);}
+  .side-bottom{margin-top:auto; padding-top:14px; border-top:1px solid var(--border);}
+  .side-bottom .nav-item{color:var(--text-faint);}
+
+  .main{flex:1; min-width:0; height:100vh; overflow-y:auto;}
+  .topbar{
+    padding:22px 32px; border-bottom:1px solid var(--border); background:var(--bg); position:sticky; top:0; z-index:5;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .topbar h1{font-size:20px; font-weight:800; margin:0;}
+  .topbar .sub{font-size:12.5px; color:var(--text-faint); margin-top:3px;}
+  .view{padding:26px 32px 60px;}
+  .view-panel{display:none;}
+  .view-panel.on{display:block;}
+
+  .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:26px;}
+  .stat-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px;}
+  .stat-card .lbl{font-size:11.5px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px;}
+  .stat-card .val{font-size:23px; font-weight:800;}
+  .stat-card .val.gold{color:var(--gold);}
+  .stat-card .val.green{color:var(--green);}
+  .stat-card .val.red{color:var(--red);}
+  .stat-card .hint{font-size:11.5px; color:var(--text-faint); margin-top:4px;}
+
+  .panel{background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden;}
+  .panel-head{padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .panel-head h3{font-size:14.5px; font-weight:700;}
+  .panel-body{padding:20px;}
+
+  input[type=text],input[type=date],input[type=time],input[type=number],input[type=tel],select,textarea{
+    background:var(--card2); border:1px solid var(--border2); border-radius:8px; padding:10px 12px; font-size:13.5px; width:100%; outline:none;
+  }
+  input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+  label{font-size:11.5px; color:var(--text-dim); font-weight:700; margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:.03em;}
+  .field{margin-bottom:14px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+
+  table{width:100%; border-collapse:collapse;}
+  th{text-align:left; color:var(--text-faint); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em; padding:10px 14px; border-bottom:1px solid var(--border);}
+  td{padding:13px 14px; font-size:13.5px; border-bottom:1px solid var(--border);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(255,255,255,.015);}
+  .empty-row td{text-align:center; color:var(--text-faint); padding:38px 10px; font-size:13px;}
+
+  .badge{display:inline-flex; align-items:center; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700;}
+  .badge.gold{background:var(--gold-bg); color:var(--gold);}
+  .badge.green{background:var(--green-bg); color:var(--green);}
+  .badge.red{background:var(--red-bg); color:var(--red);}
+  .badge.amber{background:var(--amber-bg); color:var(--amber);}
+  .badge.blue{background:var(--blue-bg); color:var(--blue);}
+  .badge.gray{background:var(--card2); color:var(--text-faint);}
+
+  .icon-btn{background:var(--card2); border:1px solid var(--border2); border-radius:7px; padding:7px 10px; font-size:12px; color:var(--text-dim);}
+  .icon-btn:hover{border-color:var(--gold); color:var(--gold);}
+
+  /* Agenda */
+  .agenda-toolbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:12px; flex-wrap:wrap;}
+  .day-nav{display:flex; align-items:center; gap:10px;}
+  .day-nav .date-lbl{font-size:14.5px; font-weight:700; min-width:190px; text-align:center;}
+  .slot-grid{display:flex; flex-direction:column; gap:8px;}
+  .slot{
+    display:flex; align-items:center; gap:16px; padding:14px 16px; border-radius:10px; border:1px solid var(--border);
+    background:var(--card2); cursor:pointer; transition:border-color .15s;
+  }
+  .slot:hover{border-color:var(--gold-bg);}
+  .slot .time{font-size:13px; font-weight:700; color:var(--text-dim); width:80px; flex-shrink:0;}
+  .slot.busy{border-color:var(--gold-bg); background:rgba(212,175,55,.06); cursor:default;}
+  .slot.free{color:var(--text-faint); font-size:13px;}
+  .slot.free .plus{color:var(--gold); font-weight:800;}
+  .slot-info{flex:1; min-width:0;}
+  .slot-info .cli{font-size:13.5px; font-weight:700;}
+  .slot-info .pod{font-size:12px; color:var(--text-dim);}
+
+  /* Kanban */
+  .kanban{display:grid; grid-template-columns:repeat(5,1fr); gap:14px; align-items:start;}
+  .kanban-col{background:var(--card); border:1px solid var(--border); border-radius:14px; min-height:200px;}
+  .kanban-col-head{padding:14px 16px; border-bottom:1px solid var(--border); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; display:flex; justify-content:space-between; align-items:center;}
+  .kanban-col-body{padding:10px; display:flex; flex-direction:column; gap:8px; min-height:120px;}
+  .kcard{background:var(--card2); border:1px solid var(--border2); border-radius:10px; padding:12px; font-size:12.5px;}
+  .kcard .cli{font-weight:700; font-size:13px; margin-bottom:2px;}
+  .kcard .pod{color:var(--text-dim); margin-bottom:8px;}
+  .kcard .mv{display:flex; gap:6px; flex-wrap:wrap;}
+  .kcard .mv button{flex:1; font-size:10.5px; padding:5px 6px;}
+
+  /* Modal */
+  .modal-bg{display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(3px); z-index:100; align-items:center; justify-content:center; padding:20px;}
+  .modal-bg.on{display:flex;}
+  .modal{background:var(--panel); border:1px solid var(--border2); border-radius:16px; width:100%; max-width:440px; max-height:90vh; overflow-y:auto;}
+  .modal-head{padding:18px 22px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;}
+  .modal-head h3{font-size:15px; font-weight:700;}
+  .modal-head button{background:none; border:none; color:var(--text-faint); font-size:20px; line-height:1;}
+  .modal-body{padding:20px 22px;}
+  .modal-foot{padding:16px 22px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end;}
+
+  @media(max-width:860px){
+    .side{position:fixed; left:-230px; z-index:60; transition:left .2s; box-shadow:0 0 40px rgba(0,0,0,.5);}
+    .side.on{left:0;}
+    .stat-row{grid-template-columns:1fr 1fr;}
+    .field-row{grid-template-columns:1fr;}
+    .kanban{grid-template-columns:1fr; }
+    .view{padding:20px 16px 50px;}
+    .topbar{padding:16px 18px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SITE PÚBLICO ============ -->
+<div id="site">
+  <header class="site-header">
+    <div class="wrap">
+      <div class="brand">
+        <img src="assets/logo.jpeg" alt="Enterprise Podcast Studio">
+        <div class="name">Enterprise Podcast<small>Studio</small></div>
+      </div>
+      <nav class="site-nav">
+        <a href="#sobre">O Estúdio</a>
+        <a href="#servicos">Serviços</a>
+        <a href="#camila">Camila Rodrigues</a>
+        <a href="#contato">Contato</a>
+      </nav>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <a href="#contato" class="btn btn-gold">Agendar Horário</a>
+        <button class="btn-ghost" onclick="openApp()" style="border:1px solid var(--border2); padding:11px 16px; border-radius:8px;">Área da Equipe</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap-narrow">
+      <div>
+        <span class="eyebrow">Estúdio para Podcast · Barra da Tijuca</span>
+        <h1>Seu podcast merece um<br>estúdio de verdade.</h1>
+        <p class="lead">Equipamento moderno, ambiente preparado e uma equipe de edição que entende de produção de conteúdo. Grave com qualidade profissional sem sair da Barra.</p>
+        <div class="hero-actions">
+          <a href="#contato" class="btn btn-gold">Agendar meu horário</a>
+          <a href="#sobre" class="btn btn-outline">Conhecer o estúdio</a>
+        </div>
+        <div class="hero-stats">
+          <div><b>1</b><span>SALA DEDICADA</span></div>
+          <div><b>100%</b><span>EDIÇÃO PROFISSIONAL</span></div>
+          <div><b>20+</b><span>ANOS DE PALCO COM CAMILA RODRIGUES</span></div>
+        </div>
+      </div>
+      <div class="hero-media">
+        <img src="assets/logo.jpeg" alt="Logo Enterprise Podcast Studio">
+      </div>
+    </div>
+  </section>
+
+  <section id="sobre" class="section-alt">
+    <div class="wrap-narrow about-grid">
+      <div>
+        <span class="eyebrow">O Estúdio</span>
+        <h2>Estrutura pensada para quem leva podcast a sério</h2>
+        <p class="lead">Da captação à entrega final, cuidamos de cada detalhe pra você chegar, gravar e sair com o episódio pronto pra publicar.</p>
+        <ul>
+          <li><span class="check">✓</span><span><b>Equipamento moderno</b> — câmeras, microfones e iluminação de nível profissional.</span></li>
+          <li><span class="check">✓</span><span><b>Estúdio preparado</b> — acústica tratada, ambiente confortável para convidados e host.</span></li>
+          <li><span class="check">✓</span><span><b>Edição profissional</b> — equipe própria de edição de áudio e vídeo.</span></li>
+        </ul>
+      </div>
+      <div class="address-card">
+        <div class="row"><span>📍</span><div><b>Endereço</b>Av. das Américas, 3665 — loja 230<br>Shopping Barra Square Expansão<br>Barra da Tijuca, Rio de Janeiro</div></div>
+        <div class="row"><span>💬</span><div><b>Contato</b>WhatsApp em breve — enquanto isso, fale pelo formulário abaixo.</div></div>
+        <div class="row"><span>🎙️</span><div><b>Sala</b>Estúdio único, reservas por horário</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="servicos">
+    <div class="wrap-narrow center">
+      <span class="eyebrow">Serviços</span>
+      <h2>Tudo que seu episódio precisa</h2>
+      <p class="lead">Do agendamento à entrega, um processo simples pensado pra criador de conteúdo.</p>
+      <div class="grid-3">
+        <div class="feature-card">
+          <div class="ic">🎥</div>
+          <h3>Gravação em áudio e vídeo</h3>
+          <p>Captação multi-câmera com áudio de estúdio, pronta para cortes e redes sociais.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ic">💡</div>
+          <h3>Estúdio equipado</h3>
+          <p>Iluminação, cenário e acústica preparados — você chega e grava.</p>
+        </div>
+        <div class="feature-card">
+          <div class="ic">✂️</div>
+          <h3>Edição profissional</h3>
+          <p>Equipe de edição própria cuida do episódio completo e dos cortes para redes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="camila" class="star-section">
+    <div class="wrap-narrow star-grid">
+      <div class="star-photo">
+        <span class="ph">🎭</span>
+        <div class="star-badge"><b>Sócia · Enterprise Podcast Studio</b></div>
+      </div>
+      <div>
+        <span class="eyebrow">Nossa Estrela</span>
+        <h2>Camila Rodrigues</h2>
+        <p class="star-quote">"Mais de 20 anos de carreira nos palcos e nas telas — e agora dedicados também a ajudar histórias a encontrarem seu microfone."</p>
+        <p class="lead" style="max-width:none;">Atriz com mais de 20 anos de carreira, reconhecimento e sucesso consolidado, Camila Rodrigues é sócia do Enterprise Podcast Studio e leva sua experiência de palco e câmera para ajudar criadores a se comunicarem melhor — na frente e por trás do microfone.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contato" class="cta-band">
+    <div class="wrap-narrow">
+      <span class="eyebrow">Contato</span>
+      <h2>Vamos gravar seu próximo episódio?</h2>
+      <p class="lead center" style="margin:0 auto;">Av. das Américas, 3665 — loja 230, Shopping Barra Square Expansão, Barra da Tijuca, RJ</p>
+      <a href="mailto:contato@enterprisepodcaststudio.com.br" class="btn btn-gold">Falar com o estúdio</a>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div>
+        <div class="brand" style="margin-bottom:12px;">
+          <img src="assets/logo.jpeg" alt="Enterprise Podcast Studio" style="width:34px;height:34px;">
+          <div class="name" style="font-size:14px;">Enterprise Podcast<small>Studio</small></div>
+        </div>
+        <p style="max-width:280px;">Estúdio de podcast na Barra da Tijuca. Equipamento moderno, estúdio preparado e edição profissional.</p>
+      </div>
+      <div>
+        <h4>Navegação</h4>
+        <a href="#sobre">O Estúdio</a>
+        <a href="#servicos">Serviços</a>
+        <a href="#camila">Camila Rodrigues</a>
+        <a href="#contato">Contato</a>
+      </div>
+      <div>
+        <h4>Endereço</h4>
+        <p>Av. das Américas, 3665, loja 230<br>Shopping Barra Square Expansão<br>Barra da Tijuca — Rio de Janeiro</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Enterprise Podcast Studio. Todos os direitos reservados.</span>
+      <button class="btn-ghost" onclick="openApp()" style="background:none;border:none;">Área da Equipe →</button>
+    </div>
+  </footer>
+</div>
+
+<!-- ============ SISTEMA INTERNO ============ -->
+<div id="app">
+  <aside class="side" id="side">
+    <div class="side-logo">
+      <img src="assets/logo.jpeg" alt="logo">
+      <div class="txt">Enterprise<small>Área da Equipe</small></div>
+    </div>
+    <button class="nav-item active" data-view="agenda"><span class="ic">📅</span> Agenda</button>
+    <button class="nav-item" data-view="clientes"><span class="ic">👥</span> Clientes</button>
+    <button class="nav-item" data-view="producao"><span class="ic">🎬</span> Produção</button>
+    <button class="nav-item" data-view="financeiro"><span class="ic">💰</span> Financeiro</button>
+    <div class="side-bottom">
+      <button class="nav-item" onclick="closeApp()"><span class="ic">↩</span> Voltar ao site</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="nav-item" id="mobileToggle" style="display:none;width:auto;" onclick="document.getElementById('side').classList.toggle('on')">☰</button>
+      <div>
+        <h1 id="topTitle">Agenda</h1>
+        <div class="sub" id="topSub">Sala única — clique num horário livre para reservar</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-faint);">Dados salvos neste navegador · Supabase em breve</div>
+    </div>
+
+    <div class="view">
+      <!-- AGENDA -->
+      <div class="view-panel on" id="view-agenda">
+        <div class="agenda-toolbar">
+          <div class="day-nav">
+            <button class="icon-btn" onclick="agendaMove(-1)">‹</button>
+            <div class="date-lbl" id="agendaDateLbl"></div>
+            <button class="icon-btn" onclick="agendaMove(1)">›</button>
+          </div>
+          <button class="btn btn-outline" onclick="agendaToday()">Hoje</button>
+        </div>
+        <div class="panel">
+          <div class="panel-body">
+            <div class="slot-grid" id="slotGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="view-panel" id="view-clientes">
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head">
+            <h3>Novo cliente</h3>
+          </div>
+          <div class="panel-body">
+            <div class="field-row">
+              <div class="field"><label>Nome</label><input type="text" id="cliNome" placeholder="Nome do cliente"></div>
+              <div class="field"><label>WhatsApp</label><input type="tel" id="cliWhats" placeholder="(21) 90000-0000"></div>
+            </div>
+            <div class="field"><label>Empresa / Podcast</label><input type="text" id="cliEmpresa" placeholder="Nome do podcast ou empresa"></div>
+            <button class="btn btn-gold" onclick="addCliente()">+ Adicionar cliente</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Todos os clientes</h3></div>
+          <table>
+            <thead><tr><th>Nome</th><th>WhatsApp</th><th>Empresa/Podcast</th><th>Gravações</th><th>Total gasto</th><th></th></tr></thead>
+            <tbody id="clientesTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PRODUÇÃO -->
+      <div class="view-panel" id="view-producao">
+        <div class="kanban" id="kanban"></div>
+      </div>
+
+      <!-- FINANCEIRO -->
+      <div class="view-panel" id="view-financeiro">
+        <div class="stat-row">
+          <div class="stat-card"><div class="lbl">Recebido no mês</div><div class="val green" id="finRecebido">R$ 0,00</div></div>
+          <div class="stat-card"><div class="lbl">A receber</div><div class="val gold" id="finAReceber">R$ 0,00</div></div>
+          <div class="stat-card"><div class="lbl">Despesas do mês</div><div class="val red" id="finDespesas">R$ 0,00</div></div>
+          <div class="stat-card"><div class="lbl">Lucro líquido</div><div class="val" id="finLucro">R$ 0,00</div></div>
+        </div>
+        <div class="panel" style="margin-bottom:20px;">
+          <div class="panel-head"><h3>Nova despesa</h3></div>
+          <div class="panel-body">
+            <div class="field-row">
+              <div class="field"><label>Descrição</label><input type="text" id="despDesc" placeholder="Ex: Conta de luz"></div>
+              <div class="field"><label>Valor (R$)</label><input type="number" id="despValor" placeholder="0,00" step="0.01"></div>
+            </div>
+            <div class="field"><label>Data</label><input type="date" id="despData"></div>
+            <button class="btn btn-gold" onclick="addDespesa()">+ Adicionar despesa</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Reservas do mês (recebido / a receber)</h3></div>
+          <table>
+            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Status</th></tr></thead>
+            <tbody id="finReservasTbody"></tbody>
+          </table>
+        </div>
+        <div class="panel" style="margin-top:20px;">
+          <div class="panel-head"><h3>Despesas do mês</h3></div>
+          <table>
+            <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th></th></tr></thead>
+            <tbody id="finDespesasTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Reserva -->
+<div class="modal-bg" id="modalReserva">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalReservaTitle">Nova reserva</h3>
+      <button onclick="closeModal('modalReserva')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Cliente</label>
+        <select id="resCliente"></select>
+      </div>
+      <div class="field"><label>Podcast / Programa</label><input type="text" id="resPodcast" placeholder="Nome do episódio ou programa"></div>
+      <div class="field-row">
+        <div class="field"><label>Início</label><input type="time" id="resHora"></div>
+        <div class="field"><label>Duração (min)</label><input type="number" id="resDuracao" value="90" step="15"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Valor (R$)</label><input type="number" id="resValor" placeholder="0,00" step="0.01"></div>
+        <div class="field">
+          <label>Pagamento</label>
+          <select id="resPagamento"><option value="pendente">A receber</option><option value="pago">Pago</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Observação</label><textarea id="resObs" rows="2" placeholder="Detalhes da gravação..."></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="icon-btn" id="resDeleteBtn" style="display:none;color:var(--red);" onclick="deleteReservaCurrent()">Excluir</button>
+      <button class="btn btn-outline" onclick="closeModal('modalReserva')">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveReserva()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ESTADO / DADOS (localStorage por enquanto — Supabase depois)
+   Estrutura já pensada pra migrar direto pras tabelas:
+   podcast_clientes, podcast_reservas, podcast_despesas
+   ============================================================ */
+const DB_KEY = 'eps_data_v1';
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return { clientes: [], reservas: [], despesas: [] };
+}
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+let db = loadDB();
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------- Navegação site <-> app ---------- */
+function openApp(){
+  document.getElementById('site').style.display = 'none';
+  document.getElementById('app').classList.add('on');
+  renderAll();
+}
+function closeApp(){
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('site').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const v = btn.dataset.view;
+    document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('on'));
+    document.getElementById('view-'+v).classList.add('on');
+    const titles = {agenda:['Agenda','Sala única — clique num horário livre para reservar'],
+      clientes:['Clientes','Cadastro e histórico de gravações'],
+      producao:['Produção','Acompanhamento do fluxo de cada episódio'],
+      financeiro:['Financeiro','Recebido, a receber, despesas e lucro do mês']};
+    document.getElementById('topTitle').textContent = titles[v][0];
+    document.getElementById('topSub').textContent = titles[v][1];
+    document.getElementById('side').classList.remove('on');
+    if(v==='clientes') renderClientes();
+    if(v==='producao') renderKanban();
+    if(v==='financeiro') renderFinanceiro();
+  });
+});
+
+function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+function money(v){ return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+
+/* ---------- AGENDA ---------- */
+const HORARIOS = ['08:00','09:30','11:00','12:30','14:00','15:30','17:00','18:30','20:00'];
+let agendaDate = new Date();
+
+function fmtDate(d){ return d.toISOString().slice(0,10); }
+function fmtDateLbl(d){
+  return d.toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long'});
+}
+function agendaMove(delta){ agendaDate.setDate(agendaDate.getDate()+delta); renderAgenda(); }
+function agendaToday(){ agendaDate = new Date(); renderAgenda(); }
+
+let currentReservaId = null;
+
+function renderAgenda(){
+  document.getElementById('agendaDateLbl').textContent = fmtDateLbl(agendaDate);
+  const dateStr = fmtDate(agendaDate);
+  const grid = document.getElementById('slotGrid');
+  grid.innerHTML = '';
+  const dayReservas = db.reservas.filter(r=>r.data===dateStr);
+
+  HORARIOS.forEach(hora=>{
+    const reserva = dayReservas.find(r=>r.hora===hora);
+    const slot = document.createElement('div');
+    if(reserva){
+      const cli = db.clientes.find(c=>c.id===reserva.clienteId);
+      slot.className = 'slot busy';
+      slot.innerHTML = `<span class="time">${hora}</span>
+        <div class="slot-info"><div class="cli">${cli?cli.nome:'Cliente removido'}</div><div class="pod">${reserva.podcast||''} · ${reserva.duracao}min</div></div>
+        <span class="badge ${reserva.pagamento==='pago'?'green':'amber'}">${reserva.pagamento==='pago'?'Pago':'A receber'}</span>`;
+      slot.onclick = ()=>openReservaModal(dateStr, hora, reserva.id);
+    } else {
+      slot.className = 'slot free';
+      slot.innerHTML = `<span class="time">${hora}</span><span>Horário disponível</span><span class="plus" style="margin-left:auto;">+ Reservar</span>`;
+      slot.onclick = ()=>openReservaModal(dateStr, hora, null);
+    }
+    grid.appendChild(slot);
+  });
+}
+
+function openReservaModal(dateStr, hora, reservaId){
+  currentReservaId = reservaId;
+  const sel = document.getElementById('resCliente');
+  sel.innerHTML = db.clientes.length
+    ? db.clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')
+    : '<option value="">Cadastre um cliente primeiro</option>';
+
+  if(reservaId){
+    const r = db.reservas.find(x=>x.id===reservaId);
+    document.getElementById('modalReservaTitle').textContent = 'Editar reserva — ' + hora;
+    sel.value = r.clienteId;
+    document.getElementById('resPodcast').value = r.podcast||'';
+    document.getElementById('resHora').value = r.hora;
+    document.getElementById('resDuracao').value = r.duracao;
+    document.getElementById('resValor').value = r.valor;
+    document.getElementById('resPagamento').value = r.pagamento;
+    document.getElementById('resObs').value = r.obs||'';
+    document.getElementById('resDeleteBtn').style.display = 'inline-block';
+  } else {
+    document.getElementById('modalReservaTitle').textContent = 'Nova reserva — ' + hora;
+    document.getElementById('resPodcast').value = '';
+    document.getElementById('resHora').value = hora;
+    document.getElementById('resDuracao').value = 90;
+    document.getElementById('resValor').value = '';
+    document.getElementById('resPagamento').value = 'pendente';
+    document.getElementById('resObs').value = '';
+    document.getElementById('resDeleteBtn').style.display = 'none';
+  }
+  document.getElementById('modalReserva').dataset.date = dateStr;
+  document.getElementById('modalReserva').classList.add('on');
+}
+
+function saveReserva(){
+  const clienteId = document.getElementById('resCliente').value;
+  if(!clienteId){ alert('Cadastre e selecione um cliente.'); return; }
+  const dateStr = document.getElementById('modalReserva').dataset.date;
+  const data = {
+    clienteId,
+    podcast: document.getElementById('resPodcast').value.trim(),
+    data: dateStr,
+    hora: document.getElementById('resHora').value,
+    duracao: Number(document.getElementById('resDuracao').value)||90,
+    valor: Number(document.getElementById('resValor').value)||0,
+    pagamento: document.getElementById('resPagamento').value,
+    obs: document.getElementById('resObs').value.trim(),
+  };
+  if(currentReservaId){
+    const r = db.reservas.find(x=>x.id===currentReservaId);
+    Object.assign(r, data);
+  } else {
+    db.reservas.push(Object.assign({id:uid(), status:'Agendado', criadoEm:new Date().toISOString()}, data));
+  }
+  saveDB();
+  closeModal('modalReserva');
+  renderAgenda();
+}
+
+function deleteReservaCurrent(){
+  if(!currentReservaId) return;
+  if(!confirm('Excluir esta reserva?')) return;
+  db.reservas = db.reservas.filter(r=>r.id!==currentReservaId);
+  saveDB();
+  closeModal('modalReserva');
+  renderAgenda();
+}
+
+/* ---------- CLIENTES ---------- */
+function addCliente(){
+  const nome = document.getElementById('cliNome').value.trim();
+  if(!nome){ alert('Informe o nome do cliente.'); return; }
+  db.clientes.push({
+    id: uid(),
+    nome,
+    whatsapp: document.getElementById('cliWhats').value.trim(),
+    empresa: document.getElementById('cliEmpresa').value.trim(),
+    criadoEm: new Date().toISOString()
+  });
+  saveDB();
+  document.getElementById('cliNome').value='';
+  document.getElementById('cliWhats').value='';
+  document.getElementById('cliEmpresa').value='';
+  renderClientes();
+}
+
+function deleteCliente(id){
+  if(!confirm('Remover cliente? As reservas associadas continuam no histórico.')) return;
+  db.clientes = db.clientes.filter(c=>c.id!==id);
+  saveDB();
+  renderClientes();
+}
+
+function renderClientes(){
+  const tbody = document.getElementById('clientesTbody');
+  if(!db.clientes.length){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhum cliente cadastrado ainda.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = db.clientes.map(c=>{
+    const reservas = db.reservas.filter(r=>r.clienteId===c.id);
+    const totalGasto = reservas.reduce((s,r)=>s+(r.valor||0),0);
+    return `<tr>
+      <td><b>${c.nome}</b></td>
+      <td>${c.whatsapp||'—'}</td>
+      <td>${c.empresa||'—'}</td>
+      <td>${reservas.length}</td>
+      <td>${money(totalGasto)}</td>
+      <td><button class="icon-btn" onclick="deleteCliente('${c.id}')">Remover</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ---------- PRODUÇÃO (kanban) ---------- */
+const ETAPAS = ['Agendado','Gravado','Em edição','Pronto','Entregue'];
+function renderKanban(){
+  const kanban = document.getElementById('kanban');
+  const hoje = fmtDate(new Date());
+  kanban.innerHTML = ETAPAS.map(etapa=>{
+    const items = db.reservas.filter(r=>r.status===etapa && r.data<= new Date(Date.now()+1000*60*60*24*365).toISOString().slice(0,10));
+    const cards = db.reservas.filter(r=>r.status===etapa).sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
+      const cli = db.clientes.find(c=>c.id===r.clienteId);
+      const idx = ETAPAS.indexOf(etapa);
+      const prev = ETAPAS[idx-1], next = ETAPAS[idx+1];
+      return `<div class="kcard">
+        <div class="cli">${cli?cli.nome:'—'}</div>
+        <div class="pod">${r.podcast||'Sem título'} · ${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</div>
+        <div class="mv">
+          ${prev?`<button class="icon-btn" onclick="moveEtapa('${r.id}','${prev}')">← ${prev}</button>`:''}
+          ${next?`<button class="icon-btn" onclick="moveEtapa('${r.id}','${next}')">${next} →</button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="kanban-col">
+      <div class="kanban-col-head"><span>${etapa}</span><span class="badge gray">${db.reservas.filter(r=>r.status===etapa).length}</span></div>
+      <div class="kanban-col-body">${cards || '<div style="padding:16px;text-align:center;color:var(--text-faint);font-size:12px;">Vazio</div>'}</div>
+    </div>`;
+  }).join('');
+}
+function moveEtapa(reservaId, novaEtapa){
+  const r = db.reservas.find(x=>x.id===reservaId);
+  if(r){ r.status = novaEtapa; saveDB(); renderKanban(); }
+}
+
+/* ---------- FINANCEIRO ---------- */
+function addDespesa(){
+  const desc = document.getElementById('despDesc').value.trim();
+  const valor = Number(document.getElementById('despValor').value);
+  const data = document.getElementById('despData').value || fmtDate(new Date());
+  if(!desc || !valor){ alert('Preencha descrição e valor.'); return; }
+  db.despesas.push({id:uid(), descricao:desc, valor, data});
+  saveDB();
+  document.getElementById('despDesc').value='';
+  document.getElementById('despValor').value='';
+  document.getElementById('despData').value='';
+  renderFinanceiro();
+}
+function deleteDespesa(id){
+  db.despesas = db.despesas.filter(d=>d.id!==id);
+  saveDB();
+  renderFinanceiro();
+}
+
+function renderFinanceiro(){
+  const now = new Date();
+  const ym = now.toISOString().slice(0,7);
+  const reservasMes = db.reservas.filter(r=>r.data && r.data.startsWith(ym));
+  const despesasMes = db.despesas.filter(d=>d.data && d.data.startsWith(ym));
+
+  const recebido = reservasMes.filter(r=>r.pagamento==='pago').reduce((s,r)=>s+(r.valor||0),0);
+  const aReceber = reservasMes.filter(r=>r.pagamento!=='pago').reduce((s,r)=>s+(r.valor||0),0);
+  const despesasTotal = despesasMes.reduce((s,d)=>s+(d.valor||0),0);
+  const lucro = recebido - despesasTotal;
+
+  document.getElementById('finRecebido').textContent = money(recebido);
+  document.getElementById('finAReceber').textContent = money(aReceber);
+  document.getElementById('finDespesas').textContent = money(despesasTotal);
+  const lucroEl = document.getElementById('finLucro');
+  lucroEl.textContent = money(lucro);
+  lucroEl.className = 'val ' + (lucro>=0?'green':'red');
+
+  const tbody = document.getElementById('finReservasTbody');
+  tbody.innerHTML = reservasMes.length ? reservasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(r=>{
+    const cli = db.clientes.find(c=>c.id===r.clienteId);
+    return `<tr>
+      <td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${cli?cli.nome:'—'}</td>
+      <td>${r.podcast||'—'}</td>
+      <td>${money(r.valor)}</td>
+      <td><span class="badge ${r.pagamento==='pago'?'green':'amber'}">${r.pagamento==='pago'?'Pago':'A receber'}</span></td>
+    </tr>`;
+  }).join('') : '<tr class="empty-row"><td colspan="5">Nenhuma reserva este mês.</td></tr>';
+
+  const tbodyD = document.getElementById('finDespesasTbody');
+  tbodyD.innerHTML = despesasMes.length ? despesasMes.sort((a,b)=>a.data.localeCompare(b.data)).map(d=>`
+    <tr>
+      <td>${new Date(d.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${d.descricao}</td>
+      <td>${money(d.valor)}</td>
+      <td><button class="icon-btn" onclick="deleteDespesa('${d.id}')">Remover</button></td>
+    </tr>`).join('') : '<tr class="empty-row"><td colspan="4">Nenhuma despesa este mês.</td></tr>';
+}
+
+function renderAll(){
+  renderAgenda();
+  renderClientes();
+  renderKanban();
+  renderFinanceiro();
+}
+</script>
+</body>
+</html>
