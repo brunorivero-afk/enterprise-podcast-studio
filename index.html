@@ -541,6 +541,9 @@
     <button class="nav-item" data-view="financeiro"><span class="ic">💰</span> Financeiro</button>
     <div class="side-bottom">
       <div style="padding:6px 12px 10px; font-size:11px; color:var(--text-faint);">Conectado como <b id="currentRoleLbl" style="color:var(--text-dim);">—</b></div>
+      <button class="nav-item" id="btnExportBackup" onclick="exportBackup()"><span class="ic">💾</span> Exportar backup</button>
+      <button class="nav-item" id="btnImportBackup" onclick="document.getElementById('importFile').click()"><span class="ic">📂</span> Importar backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importBackup(event)">
       <button class="nav-item" onclick="logoutRole()"><span class="ic">🔒</span> Trocar de usuário</button>
       <button class="nav-item" onclick="closeApp()"><span class="ic">↩</span> Voltar ao site</button>
     </div>
@@ -929,6 +932,48 @@ function submitLogin(){
   closeModal('modalLogin');
   openApp();
 }
+/* ---------- Backup (exportar/importar) ----------
+   Enquanto os dados vivem só no localStorage deste navegador, isso é
+   a única rede de segurança real: se o cache limpar ou trocar de
+   aparelho, sem um backup exportado os dados se perdem. Recomendo
+   exportar toda semana até o Supabase entrar. */
+function exportBackup(){
+  const dataStr = JSON.stringify(db, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = fmtDate(new Date());
+  a.href = url;
+  a.download = `enterprise-podcast-studio-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importBackup(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!confirm('Importar esse backup vai SUBSTITUIR todos os dados atuais deste navegador. Tem certeza?')){ e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!Array.isArray(parsed.clientes) || !Array.isArray(parsed.reservas)){ alert('Esse arquivo não parece um backup válido do sistema.'); return; }
+      if(!parsed.despesas) parsed.despesas = [];
+      if(!parsed.horarios) parsed.horarios = horariosPadrao();
+      if(!parsed.config) parsed.config = { comissaoPct: 10 };
+      db = parsed;
+      saveDB();
+      alert('Backup importado com sucesso!');
+      renderAll();
+    }catch(err){
+      alert('Não consegui ler esse arquivo. Confirme que é um backup exportado por aqui mesmo.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
 function logoutRole(){
   sessionStorage.removeItem('eps_role');
   closeApp();
@@ -939,6 +984,8 @@ function applyRolePermissions(){
   document.getElementById('currentRoleLbl').textContent = ROLE_LABELS[role];
   document.querySelector('.nav-item[data-view="financeiro"]').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnConfigHorarios').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnExportBackup').style.display = isAdmin ? '' : 'none';
+  document.getElementById('btnImportBackup').style.display = isAdmin ? '' : 'none';
   document.body.classList.toggle('role-operador', !isAdmin);
   if(!isAdmin && document.getElementById('view-financeiro').classList.contains('on')){
     activateView('clientes');
