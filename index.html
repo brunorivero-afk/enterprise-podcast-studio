@@ -601,8 +601,9 @@
         <div class="kanban" id="kanban"></div>
         <div class="panel" style="margin-top:20px;">
           <div class="panel-head"><h3>Histórico de entregas</h3></div>
+          <p class="contact-note" style="margin:0 20px 12px;">Clique numa entrega pra ver o resumo, marcar pagamento ou enviar o contrato.</p>
           <table>
-            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th></tr></thead>
+            <thead><tr><th>Data</th><th>Cliente</th><th>Podcast</th><th>Valor</th><th>Pagamento</th></tr></thead>
             <tbody id="historicoEntregasBody"></tbody>
           </table>
         </div>
@@ -648,6 +649,7 @@
                   <option value="Manutenção">Manutenção</option>
                   <option value="Salários/Comissões">Salários/Comissões</option>
                   <option value="Imposto">Imposto</option>
+                  <option value="Insumos">Insumos</option>
                   <option value="Outros">Outros</option>
                 </select>
               </div>
@@ -843,6 +845,11 @@
           <button type="button" class="icon-btn" style="margin-top:8px;" onclick="copyPixKey()">Copiar chave Pix</button>
           <p class="contact-note" style="margin-top:10px;">Envie esses dados pro cliente e marque o status como "Pago" assim que o Pix cair na conta.</p>
         </div>
+      </div>
+      <div class="field">
+        <label>Contrato</label>
+        <input type="text" id="resContratoLink" placeholder="Link do contrato (Google Drive, Docs, Autentique...)">
+        <button type="button" class="icon-btn" style="margin-top:8px;" onclick="enviarContrato()">📄 Enviar contrato por WhatsApp</button>
       </div>
       <div class="field"><label>Observação</label><textarea id="resObs" rows="2" placeholder="Detalhes da gravação..."></textarea></div>
     </div>
@@ -1179,6 +1186,7 @@ function openReservaModal(dateStr, hora, reservaId){
     resExtras = r.extras ? JSON.parse(JSON.stringify(r.extras)) : [];
     document.getElementById('resPagamento').value = r.pagamento;
     document.getElementById('resFormaPagamento').value = r.formaPagamento||'';
+    document.getElementById('resContratoLink').value = r.contratoLink||'';
     document.getElementById('resObs').value = r.obs||'';
     document.getElementById('resDeleteBtn').style.display = 'inline-block';
   } else {
@@ -1190,6 +1198,7 @@ function openReservaModal(dateStr, hora, reservaId){
     resExtras = [];
     document.getElementById('resPagamento').value = 'pendente';
     document.getElementById('resFormaPagamento').value = '';
+    document.getElementById('resContratoLink').value = '';
     document.getElementById('resObs').value = '';
     document.getElementById('resDeleteBtn').style.display = 'none';
   }
@@ -1215,6 +1224,7 @@ function saveReserva(){
     valor: recalcTotal(),
     pagamento: document.getElementById('resPagamento').value,
     formaPagamento: document.getElementById('resFormaPagamento').value,
+    contratoLink: document.getElementById('resContratoLink').value.trim(),
     obs: document.getElementById('resObs').value.trim(),
   };
   if(currentReservaId){
@@ -1226,6 +1236,8 @@ function saveReserva(){
   saveDB();
   closeModal('modalReserva');
   renderAgenda();
+  renderKanban();
+  if(document.getElementById('view-financeiro').classList.contains('on')) renderFinanceiro();
 }
 
 function deleteReservaCurrent(){
@@ -1235,6 +1247,20 @@ function deleteReservaCurrent(){
   saveDB();
   closeModal('modalReserva');
   renderAgenda();
+  renderKanban();
+}
+
+function enviarContrato(){
+  const clienteId = document.getElementById('resCliente').value;
+  const link = document.getElementById('resContratoLink').value.trim();
+  if(!clienteId){ alert('Selecione um cliente primeiro.'); return; }
+  if(!link){ alert('Cole o link do contrato antes de enviar.'); return; }
+  const cli = db.clientes.find(c=>c.id===clienteId);
+  if(!cli || !cli.whatsapp){ alert('Esse cliente não tem WhatsApp cadastrado — edite o cliente pra adicionar.'); return; }
+  const digits = cli.whatsapp.replace(/\D/g,'');
+  const phone = digits.length<=11 ? '55'+digits : digits;
+  const msg = `Olá, ${cli.nome}! Segue o contrato da sua gravação no Enterprise Podcast Studio: ${link}`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 /* ---------- CLIENTES ---------- */
@@ -1343,8 +1369,14 @@ function renderHistoricoEntregas(){
   const entregues = db.reservas.filter(r=>r.status==='Entregue').sort((a,b)=>b.data.localeCompare(a.data));
   tbody.innerHTML = entregues.length ? entregues.map(r=>{
     const cli = db.clientes.find(c=>c.id===r.clienteId);
-    return `<tr><td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td><td>${cli?cli.nome:'—'}</td><td>${r.podcast||'—'}</td></tr>`;
-  }).join('') : '<tr class="empty-row"><td colspan="3">Nada entregue ainda.</td></tr>';
+    return `<tr onclick="openReservaModal('${r.data}','${r.hora}','${r.id}')" style="cursor:pointer;">
+      <td>${new Date(r.data+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${cli?cli.nome:'—'}</td>
+      <td>${r.podcast||'—'}</td>
+      <td>${money(r.valor)}</td>
+      <td><span class="badge ${r.pagamento==='pago'?'green':'red'}">${r.pagamento==='pago'?'Pago':'Não pago'}</span></td>
+    </tr>`;
+  }).join('') : '<tr class="empty-row"><td colspan="5">Nada entregue ainda.</td></tr>';
 }
 function moveEtapa(reservaId, novaEtapa){
   const r = db.reservas.find(x=>x.id===reservaId);
@@ -1446,7 +1478,7 @@ function renderFinanceiro(){
       <td>${money(r.valor)}</td>
       <td>${r.formaPagamento||'—'}</td>
       <td>${statusBadge}</td>
-      <td>${r.pagamento!=='pago' ? `<button class="icon-btn" onclick="cobrarCliente('${r.id}')">Cobrar</button>` : ''}</td>
+      <td style="display:flex; gap:6px;">${r.pagamento!=='pago' ? `<button class="icon-btn" onclick="marcarPago('${r.id}')">Marcar pago</button><button class="icon-btn" onclick="cobrarCliente('${r.id}')">Cobrar</button>` : ''}</td>
     </tr>`;
   }).join('') : '<tr class="empty-row"><td colspan="7">Nenhuma reserva neste período.</td></tr>';
 
@@ -1496,6 +1528,14 @@ function renderFinanceiro(){
 
 function saveComissaoPct(){
   db.config.comissaoPct = Number(document.getElementById('comissaoPctInput').value) || 0;
+  saveDB();
+  renderFinanceiro();
+}
+
+function marcarPago(reservaId){
+  const r = db.reservas.find(x=>x.id===reservaId);
+  if(!r) return;
+  r.pagamento = 'pago';
   saveDB();
   renderFinanceiro();
 }
