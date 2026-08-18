@@ -249,6 +249,7 @@
 
   .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
   table{width:100%; border-collapse:collapse; min-width:520px;}
+  table.table-narrow{min-width:280px;}
   th{text-align:left; color:var(--text-faint); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em; padding:10px 14px; border-bottom:1px solid var(--border);}
   td{padding:13px 14px; font-size:13.5px; border-bottom:1px solid var(--border);}
   tr:last-child td{border-bottom:none;}
@@ -715,7 +716,7 @@
 
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head"><h3>Despesas por categoria (período)</h3></div>
-          <div class="table-scroll"><table>
+          <div class="table-scroll"><table class="table-narrow">
             <thead><tr><th>Categoria</th><th>Total</th></tr></thead>
             <tbody id="finCategoriasTbody"></tbody>
           </table></div>
@@ -746,7 +747,7 @@
 
         <div class="panel">
           <div class="panel-head"><h3>⏳ Clientes sem gravação há mais de 60 dias</h3></div>
-          <div class="table-scroll"><table>
+          <div class="table-scroll"><table class="table-narrow">
             <thead><tr><th>Cliente</th><th>Última gravação</th><th>Há quanto tempo</th></tr></thead>
             <tbody id="finInativosTbody"></tbody>
           </table></div>
