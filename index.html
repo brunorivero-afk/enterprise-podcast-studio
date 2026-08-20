@@ -193,8 +193,13 @@
   }
 
   /* ============ APP INTERNO ============ */
-  #app{display:none; min-height:100vh; background:var(--bg);}
+  #app{display:none; min-height:100vh; background:var(--bg); position:relative;}
   #app.on{display:flex;}
+  #loadingOverlay{
+    display:none; position:fixed; inset:0; background:rgba(10,10,10,.92); z-index:200;
+    align-items:center; justify-content:center;
+  }
+  .loading-box{background:var(--card); border:1px solid var(--gold-bg); border-radius:14px; padding:22px 32px; font-size:14px; font-weight:700; color:var(--gold);}
   .side{
     width:230px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--border);
     display:flex; flex-direction:column; padding:20px 14px; position:sticky; top:0; height:100vh;
@@ -573,6 +578,7 @@
 
 <!-- ============ SISTEMA INTERNO ============ -->
 <div id="app">
+  <div id="loadingOverlay"><div class="loading-box">☁️ Carregando dados do Supabase…</div></div>
   <aside class="side" id="side">
     <div class="side-logo">
       <img src="assets/logo.jpeg" alt="logo">
@@ -586,10 +592,8 @@
     <button class="nav-item" data-view="cadastros"><span class="ic">🗂️</span> Cadastros</button>
     <div class="side-bottom">
       <div style="padding:6px 12px 10px; font-size:11px; color:var(--text-faint);">Conectado como <b id="currentRoleLbl" style="color:var(--text-dim);">—</b></div>
-      <button class="nav-item" id="btnExportBackup" onclick="exportBackup()"><span class="ic">💾</span> Exportar backup</button>
-      <button class="nav-item" id="btnImportBackup" onclick="document.getElementById('importFile').click()"><span class="ic">📂</span> Importar backup</button>
-      <input type="file" id="importFile" accept="application/json" style="display:none;" onchange="importBackup(event)">
-      <button class="nav-item" onclick="logoutRole()"><span class="ic">🔒</span> Trocar de usuário</button>
+      <button class="nav-item" id="btnExportBackup" onclick="exportBackup()"><span class="ic">💾</span> Exportar cópia (.json)</button>
+      <button class="nav-item" onclick="logoutRole()"><span class="ic">🔒</span> Sair</button>
       <button class="nav-item" onclick="closeApp()"><span class="ic">↩</span> Voltar ao site</button>
     </div>
   </aside>
@@ -602,7 +606,7 @@
         <h1 id="topTitle">Clientes</h1>
         <div class="sub" id="topSub">Cadastro e histórico de gravações — comece por aqui</div>
       </div>
-      <div style="font-size:12px;color:var(--text-faint);">Dados salvos neste navegador · Supabase em breve</div>
+      <div style="font-size:12px;color:var(--text-faint);">☁️ Sincronizado em nuvem — Supabase</div>
     </div>
 
     <div class="view">
@@ -832,9 +836,9 @@
             <h3>Usuários da Área da Equipe</h3>
             <button class="btn btn-gold" onclick="openUsuarioModal(null)">+ Novo usuário</button>
           </div>
-          <p class="contact-note" style="margin:0 20px 12px;">Cada sócio/funcionário com seu próprio login e senha. Administrador vê tudo (inclusive Financeiro); Operador só Agenda, Clientes e Produção.</p>
+          <p class="contact-note" style="margin:0 20px 12px;">Cada sócio/funcionário com sua própria conta (e-mail + senha criados no painel do Supabase). Administrador vê tudo (inclusive Financeiro); Operador só Agenda, Clientes e Produção.</p>
           <div class="table-scroll"><table>
-            <thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Apelido</th><th>Perfil</th><th></th></tr></thead>
             <tbody id="usuariosTbody"></tbody>
           </table></div>
         </div>
@@ -943,10 +947,10 @@
     <div class="modal-body">
       <div class="field-row">
         <div class="field"><label>Nome</label><input type="text" id="usuNome" placeholder="Nome da pessoa"></div>
-        <div class="field"><label>Login</label><input type="text" id="usuLogin" placeholder="ex: camila" autocapitalize="off"></div>
+        <div class="field"><label>E-mail</label><input type="text" id="usuEmail" placeholder="pessoa@email.com" autocapitalize="off"></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Senha</label><input type="text" id="usuSenha" placeholder="defina uma senha"></div>
+        <div class="field"><label>Apelido (login curto)</label><input type="text" id="usuApelido" placeholder="ex: camila" autocapitalize="off"></div>
         <div class="field">
           <label>Perfil</label>
           <select id="usuRole">
@@ -955,7 +959,7 @@
           </select>
         </div>
       </div>
-      <label class="check-inline"><input type="checkbox" id="usuAtivo" checked> Ativo (consegue entrar na Área da Equipe)</label>
+      <p class="contact-note">A senha não é definida aqui — crie a conta com e-mail e senha em Authentication → Users no painel do Supabase primeiro. Aqui você só autoriza o e-mail e escolhe o perfil.</p>
     </div>
     <div class="modal-foot">
       <button class="icon-btn" id="usuDeleteBtn" style="display:none;color:var(--red);" onclick="deleteUsuarioCurrent()">Remover</button>
@@ -1118,56 +1122,97 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ============================================================
-   ESTADO / DADOS (localStorage por enquanto — Supabase depois)
-   Estrutura já pensada pra migrar direto pras tabelas:
-   podcast_clientes, podcast_reservas, podcast_despesas
+   SUPABASE — dados compartilhados entre todos os aparelhos/pessoas.
+   Mesmo projeto usado pelo BIG GTD / Finanças Casa / Agenda Renata /
+   CBS. Tabelas prefixadas "eps_". RLS de verdade no banco: Financeiro
+   /Despesas/Comissionados/Config só o Administrador acessa — mesmo
+   que alguém tente burlar pelo console do navegador.
    ============================================================ */
-const DB_KEY = 'eps_data_v1';
+const SUPABASE_URL = 'https://pxcqyzbgfbwwkazmonzx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4Y3F5emJnZmJ3d2them1vbnp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTc3ODEsImV4cCI6MjA5Nzc3Mzc4MX0.JYBimxgVyL-mXilSTVuQ1CO8g0xQtAFc18lfRaWa0UI';
+const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const DIAS_SEMANA = ['dom','seg','ter','qua','qui','sex','sab'];
 const DIAS_SEMANA_LBL = {dom:'Domingo', seg:'Segunda', ter:'Terça', qua:'Quarta', qui:'Quinta', sex:'Sexta', sab:'Sábado'};
-function horariosPadrao(){
-  // A sala é compartilhada com o IA Hub (reuniões durante o dia), então
-  // de seg a qui o Podcast fica com horário noturno; sexta é dia
-  // inteiro (sem reunião do IA Hub); fins de semana livres pro Podcast.
-  // 100% editável em ⚙️ Horários — isso é só o ponto de partida.
-  const noite = ['19:00','20:30'];
-  const sextaInteira = ['08:00','09:30','11:00','12:30','14:00','16:00','17:30','19:00','20:30'];
-  const fimDeSemana = ['09:00','11:00','14:00','16:00','18:00','20:00'];
-  return { dom:[], seg:[...noite], ter:[...noite], qua:[...noite], qui:[...noite], sex:[...sextaInteira], sab:[...fimDeSemana] };
-}
-function usuariosPadrao(){
-  // conta padrão pra nunca ficar trancado pra fora — troque a senha
-  // em Cadastros assim que possível e crie os logins dos sócios
-  return [{ id:'admin-padrao', nome:'Administrador', login:'admin', senha:'1234', role:'admin', ativo:true }];
-}
-function loadDB(){
-  try{
-    const raw = localStorage.getItem(DB_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(!parsed.horarios) parsed.horarios = horariosPadrao();
-      if(!parsed.config) parsed.config = {};
-      if(!parsed.comissionados) parsed.comissionados = [];
-      if(!parsed.usuarios || !parsed.usuarios.length) parsed.usuarios = usuariosPadrao();
-      return parsed;
-    }
-  }catch(e){}
-  return { clientes: [], reservas: [], despesas: [], comissionados: [], usuarios: usuariosPadrao(), horarios: horariosPadrao(), config: {} };
-}
-function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function horariosPadrao(){ const obj={}; DIAS_SEMANA.forEach(d=>obj[d]=[]); return obj; }
 
-let db = loadDB();
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+let db = { clientes:[], reservas:[], despesas:[], comissionados:[], usuarios:[], horarios:horariosPadrao(), config:{metaFaturamento:0, prazoRepasseDias:5} };
+let usuarioAtual = null; // perfil autorizado da pessoa logada: {email, nome, apelido, role}
+
+/* ---------- Mapeamento snake_case (Supabase) <-> camelCase (app) ----------
+   IDs sempre viram string no lado do app (mesmo comportamento de antes,
+   quando eram gerados localmente) — evita comparações number!==string
+   espalhadas pelo código todo. */
+function mapCliente(row){
+  return { id:String(row.id), nome:row.nome, whatsapp:row.whatsapp||'', empresa:row.empresa||'', email:row.email||'',
+    endereco:row.endereco||'', documento:row.documento||'', instagram:row.instagram||'', aniversario:row.aniversario||'',
+    comissionadoId: row.comissionado_id!=null ? String(row.comissionado_id) : '' };
+}
+function mapReserva(row){
+  return { id:String(row.id), clienteId: row.cliente_id!=null ? String(row.cliente_id) : '', podcast:row.podcast||'',
+    data:row.data, hora:row.hora, duracao:row.duracao||90, valorBase:Number(row.valor_base)||0, extras:row.extras||[],
+    valor:Number(row.valor)||0, pagamento:row.pagamento, formaPagamento:row.forma_pagamento||'', contratoLink:row.contrato_link||'',
+    status:row.status, obs:row.obs||'' };
+}
+function mapDespesa(row){
+  return { id:String(row.id), descricao:row.descricao, valor:Number(row.valor)||0, data:row.data, categoria:row.categoria||'Outros',
+    recorrente:!!row.recorrente, pago:!!row.pago, comissionadoId: row.comissionado_id!=null ? String(row.comissionado_id) : '' };
+}
+function mapComissionado(row){
+  return { id:String(row.id), nome:row.nome, whatsapp:row.whatsapp||'', pix:row.pix||'', pct:Number(row.pct)||0, ativo:!!row.ativo };
+}
+function mapUsuario(row){
+  return { email:row.email, nome:row.nome, apelido:row.apelido||'', role: row.posicao==='Administrador' ? 'admin' : 'operador' };
+}
+const ROLE_LABELS = { admin: 'Administrador', operador: 'Operador' };
+
+async function carregarTudo(){
+  const [c,r,d,co,h,cfg,u] = await Promise.all([
+    sbClient.from('eps_clientes').select('*').order('nome'),
+    sbClient.from('eps_reservas').select('*'),
+    sbClient.from('eps_despesas').select('*'),
+    sbClient.from('eps_comissionados').select('*').order('nome'),
+    sbClient.from('eps_horarios').select('*'),
+    sbClient.from('eps_config').select('*').maybeSingle(),
+    sbClient.from('eps_usuarios').select('*').order('nome'),
+  ]);
+  db.clientes = (c.data||[]).map(mapCliente);
+  db.reservas = (r.data||[]).map(mapReserva);
+  db.despesas = (d.data||[]).map(mapDespesa);
+  db.comissionados = (co.data||[]).map(mapComissionado);
+  const horariosObj = horariosPadrao();
+  (h.data||[]).forEach(row=>{ horariosObj[row.dia] = row.horarios||[]; });
+  db.horarios = horariosObj;
+  db.config = cfg.data ? { metaFaturamento:Number(cfg.data.meta_faturamento)||0, prazoRepasseDias:cfg.data.prazo_repasse_dias ?? 5 } : { metaFaturamento:0, prazoRepasseDias:5 };
+  db.usuarios = (u.data||[]).map(mapUsuario);
+}
+async function refetch(tabela){
+  if(tabela==='clientes'){ const {data} = await sbClient.from('eps_clientes').select('*').order('nome'); db.clientes = (data||[]).map(mapCliente); }
+  if(tabela==='reservas'){ const {data} = await sbClient.from('eps_reservas').select('*'); db.reservas = (data||[]).map(mapReserva); }
+  if(tabela==='despesas'){ const {data} = await sbClient.from('eps_despesas').select('*'); db.despesas = (data||[]).map(mapDespesa); }
+  if(tabela==='comissionados'){ const {data} = await sbClient.from('eps_comissionados').select('*').order('nome'); db.comissionados = (data||[]).map(mapComissionado); }
+  if(tabela==='horarios'){ const {data} = await sbClient.from('eps_horarios').select('*'); const obj=horariosPadrao(); (data||[]).forEach(row=>obj[row.dia]=row.horarios||[]); db.horarios = obj; }
+  if(tabela==='config'){ const {data} = await sbClient.from('eps_config').select('*').maybeSingle(); db.config = data ? {metaFaturamento:Number(data.meta_faturamento)||0, prazoRepasseDias:data.prazo_repasse_dias??5} : {metaFaturamento:0,prazoRepasseDias:5}; }
+  if(tabela==='usuarios'){ const {data} = await sbClient.from('eps_usuarios').select('*').order('nome'); db.usuarios = (data||[]).map(mapUsuario); }
+}
+function alertaErro(prefixo, error){ alert(prefixo + (error && error.message ? ': ' + error.message : '')); }
 
 /* ---------- Navegação site <-> app ---------- */
-function openApp(){
+async function openApp(){
   document.getElementById('site').style.display = 'none';
   document.getElementById('app').classList.add('on');
-  applyRolePermissions();
-  renderAll();
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'flex';
+  try{
+    await carregarTudo();
+    applyRolePermissions();
+    renderAll();
+  } finally {
+    overlay.style.display = 'none';
+  }
 }
 function closeApp(){
   document.getElementById('app').classList.remove('on');
@@ -1175,29 +1220,43 @@ function closeApp(){
   window.scrollTo(0,0);
 }
 
-/* ---------- Login / níveis de acesso ----------
-   Proteção simples e local (sem backend ainda): cada pessoa tem seu
-   próprio login/senha, cadastrados em Cadastros → Usuários, com perfil
-   Administrador (vê tudo, inclusive Financeiro) ou Operador (Agenda,
-   Clientes e Produção, sem valores agregados). Não é segurança de
-   verdade — isso chega com o Supabase Auth. */
-const ROLE_LABELS = { admin: 'Administrador', operador: 'Operador' };
-
-function usuarioLogado(){
-  const id = sessionStorage.getItem('eps_usuario_id');
-  return id ? db.usuarios.find(u=>u.id===id && u.ativo) : null;
+/* ---------- Login (Supabase Auth de verdade) ----------
+   Cada pessoa autorizada (Cadastros → Usuários) tem uma conta real no
+   Supabase Auth, criada pelo painel do Supabase com e-mail e senha.
+   Aqui o login usa um "apelido" curto que resolve pro e-mail antes de
+   autenticar. RLS no banco garante Financeiro só pro Administrador,
+   mesmo que alguém tente burlar a tela. */
+async function carregarUsuarioAtual(){
+  const { data: { user } } = await sbClient.auth.getUser();
+  if(!user || !user.email){ usuarioAtual = null; return null; }
+  const { data } = await sbClient.from('eps_usuarios').select('*').eq('email', user.email).maybeSingle();
+  usuarioAtual = data ? mapUsuario(data) : null;
+  return usuarioAtual;
 }
-function requestAppAccess(){
-  if(usuarioLogado()){ openApp(); return; }
-  sessionStorage.removeItem('eps_usuario_id');
+async function requestAppAccess(){
+  const { data: { session } } = await sbClient.auth.getSession();
+  if(session){
+    await carregarUsuarioAtual();
+    if(usuarioAtual){ openApp(); return; }
+    alert('Sua conta não está autorizada no sistema do Podcast Studio. Fale com um Administrador.');
+    await sbClient.auth.signOut();
+  }
   document.getElementById('modalLogin').classList.add('on');
 }
-function submitLogin(){
-  const login = document.getElementById('loginUsuario').value.trim();
+async function submitLogin(){
+  const apelido = document.getElementById('loginUsuario').value.trim().toLowerCase();
   const senha = document.getElementById('loginSenha').value;
-  const usuario = db.usuarios.find(u=>u.login===login && u.senha===senha && u.ativo);
-  if(!usuario){ alert('Login ou senha incorretos.'); return; }
-  sessionStorage.setItem('eps_usuario_id', usuario.id);
+  if(!apelido || !senha){ alert('Preencha login e senha.'); return; }
+  const { data: email, error: errEmail } = await sbClient.rpc('eps_email_by_apelido', { p_apelido: apelido });
+  if(errEmail || !email){ alert('Login ou senha incorretos.'); return; }
+  const { error } = await sbClient.auth.signInWithPassword({ email, password: senha });
+  if(error){ alert('Login ou senha incorretos.'); return; }
+  await carregarUsuarioAtual();
+  if(!usuarioAtual){
+    alert('Sua conta não está autorizada no sistema do Podcast Studio. Fale com um Administrador.');
+    await sbClient.auth.signOut();
+    return;
+  }
   document.getElementById('loginUsuario').value = '';
   document.getElementById('loginSenha').value = '';
   closeModal('modalLogin');
@@ -1243,11 +1302,12 @@ function exportFinanceiroCSV(){
   downloadCSV(`financeiro-${ym}.csv`, csv);
 }
 
-/* ---------- Backup (exportar/importar) ----------
-   Enquanto os dados vivem só no localStorage deste navegador, isso é
-   a única rede de segurança real: se o cache limpar ou trocar de
-   aparelho, sem um backup exportado os dados se perdem. Recomendo
-   exportar toda semana até o Supabase entrar. */
+/* ---------- Backup (exportar) ----------
+   O Supabase já é a fonte de verdade e fica salvo na nuvem — isso aqui
+   é só uma cópia manual extra pra tranquilidade (ex: mandar pro
+   contador). Não existe mais "importar" porque sobrescrever o banco
+   compartilhado com um arquivo velho arriscaria apagar dado de outra
+   pessoa que mexeu no sistema depois desse export. */
 function exportBackup(){
   const dataStr = JSON.stringify(db, null, 2);
   const blob = new Blob([dataStr], {type:'application/json'});
@@ -1261,47 +1321,20 @@ function exportBackup(){
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-function importBackup(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  if(!confirm('Importar esse backup vai SUBSTITUIR todos os dados atuais deste navegador. Tem certeza?')){ e.target.value=''; return; }
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    try{
-      const parsed = JSON.parse(ev.target.result);
-      if(!Array.isArray(parsed.clientes) || !Array.isArray(parsed.reservas)){ alert('Esse arquivo não parece um backup válido do sistema.'); return; }
-      if(!parsed.despesas) parsed.despesas = [];
-      if(!parsed.horarios) parsed.horarios = horariosPadrao();
-      if(!parsed.config) parsed.config = {};
-      if(!parsed.comissionados) parsed.comissionados = [];
-      if(!parsed.usuarios || !parsed.usuarios.length) parsed.usuarios = usuariosPadrao();
-      db = parsed;
-      saveDB();
-      alert('Backup importado com sucesso!');
-      renderAll();
-    }catch(err){
-      alert('Não consegui ler esse arquivo. Confirme que é um backup exportado por aqui mesmo.');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-}
 
-function logoutRole(){
-  sessionStorage.removeItem('eps_usuario_id');
+async function logoutRole(){
+  await sbClient.auth.signOut();
+  usuarioAtual = null;
   closeApp();
 }
 function applyRolePermissions(){
-  const usuario = usuarioLogado();
-  const role = usuario ? usuario.role : 'operador';
-  const isAdmin = role === 'admin';
-  document.getElementById('currentRoleLbl').textContent = usuario ? `${usuario.nome} (${ROLE_LABELS[role]})` : ROLE_LABELS[role];
+  const isAdmin = usuarioAtual && usuarioAtual.role === 'admin';
+  document.getElementById('currentRoleLbl').textContent = usuarioAtual ? `${usuarioAtual.nome} (${ROLE_LABELS[usuarioAtual.role]})` : '—';
   document.querySelector('.nav-item[data-view="financeiro"]').style.display = isAdmin ? '' : 'none';
   document.querySelector('.nav-item[data-view="dashboard"]').style.display = isAdmin ? '' : 'none';
   document.querySelector('.nav-item[data-view="cadastros"]').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnConfigHorarios').style.display = isAdmin ? '' : 'none';
   document.getElementById('btnExportBackup').style.display = isAdmin ? '' : 'none';
-  document.getElementById('btnImportBackup').style.display = isAdmin ? '' : 'none';
   document.body.classList.toggle('role-operador', !isAdmin);
   const viewAtual = ['financeiro','dashboard','cadastros'].find(v=>document.getElementById('view-'+v).classList.contains('on'));
   if(!isAdmin && viewAtual){
@@ -1541,7 +1574,7 @@ function openHorariosModal(){
     </div>`).join('');
   document.getElementById('modalHorarios').classList.add('on');
 }
-function saveHorarios(){
+async function saveHorarios(){
   const HORA_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
   const novosHorarios = {};
   const invalidos = [];
@@ -1559,8 +1592,10 @@ function saveHorarios(){
     alert('Esses horários não estão no formato HH:MM e não foram salvos:\n\n' + invalidos.join('\n') + '\n\nCorrija e tente de novo.');
     return;
   }
-  db.horarios = novosHorarios;
-  saveDB();
+  const rows = DIAS_SEMANA.map(dia=>({ dia, horarios: novosHorarios[dia] }));
+  const { error } = await sbClient.from('eps_horarios').upsert(rows, { onConflict: 'dia' });
+  if(error){ alertaErro('Erro ao salvar horários', error); return; }
+  await refetch('horarios');
   closeModal('modalHorarios');
   renderAgenda();
 }
@@ -1605,44 +1640,47 @@ function openReservaModal(dateStr, hora, reservaId){
   document.getElementById('modalReserva').classList.add('on');
 }
 
-function saveReserva(){
+async function saveReserva(){
   const clienteId = document.getElementById('resCliente').value;
   if(!clienteId){ alert('Cadastre e selecione um cliente.'); return; }
   const dateStr = document.getElementById('modalReserva').dataset.date;
   const valorBase = Number(document.getElementById('resValorBase').value) || 0;
-  const data = {
-    clienteId,
+  const payload = {
+    cliente_id: Number(clienteId),
     podcast: document.getElementById('resPodcast').value.trim(),
     data: dateStr,
     hora: document.getElementById('resHora').value,
     duracao: Number(document.getElementById('resDuracao').value)||90,
-    valorBase,
+    valor_base: valorBase,
     extras: [...resExtras],
     valor: recalcTotal(),
     pagamento: document.getElementById('resPagamento').value,
-    formaPagamento: document.getElementById('resFormaPagamento').value,
-    contratoLink: document.getElementById('resContratoLink').value.trim(),
+    forma_pagamento: document.getElementById('resFormaPagamento').value,
+    contrato_link: document.getElementById('resContratoLink').value.trim(),
     obs: document.getElementById('resObs').value.trim(),
   };
+  let error;
   if(currentReservaId){
-    const r = db.reservas.find(x=>x.id===currentReservaId);
-    Object.assign(r, data);
+    ({ error } = await sbClient.from('eps_reservas').update(payload).eq('id', Number(currentReservaId)));
   } else {
-    db.reservas.push(Object.assign({id:uid(), status:'Agendado', criadoEm:new Date().toISOString()}, data));
+    ({ error } = await sbClient.from('eps_reservas').insert({ ...payload, status:'Agendado' }));
   }
-  saveDB();
+  if(error){ alertaErro('Erro ao salvar reserva', error); return; }
   closeModal('modalReserva');
+  await refetch('reservas');
   renderAgenda();
   renderKanban();
   if(document.getElementById('view-financeiro').classList.contains('on')) renderFinanceiro();
+  if(document.getElementById('view-dashboard').classList.contains('on')) renderDashboard();
 }
 
-function deleteReservaCurrent(){
+async function deleteReservaCurrent(){
   if(!currentReservaId) return;
   if(!confirm('Excluir esta reserva?')) return;
-  db.reservas = db.reservas.filter(r=>r.id!==currentReservaId);
-  saveDB();
+  const { error } = await sbClient.from('eps_reservas').delete().eq('id', Number(currentReservaId));
+  if(error){ alertaErro('Erro ao excluir reserva', error); return; }
   closeModal('modalReserva');
+  await refetch('reservas');
   renderAgenda();
   renderKanban();
 }
@@ -1683,10 +1721,11 @@ function openClienteModal(id){
   document.getElementById('modalCliente').classList.add('on');
 }
 
-function saveCliente(){
+async function saveCliente(){
   const nome = document.getElementById('cliNome').value.trim();
   if(!nome){ alert('Informe o nome do cliente.'); return; }
-  const data = {
+  const comissionadoIdVal = document.getElementById('cliComissionadoId').value;
+  const payload = {
     nome,
     whatsapp: document.getElementById('cliWhats').value.trim(),
     empresa: document.getElementById('cliEmpresa').value.trim(),
@@ -1694,25 +1733,29 @@ function saveCliente(){
     endereco: document.getElementById('cliEndereco').value.trim(),
     documento: document.getElementById('cliDocumento').value.trim(),
     instagram: document.getElementById('cliInstagram').value.trim(),
-    aniversario: document.getElementById('cliAniversario').value,
-    comissionadoId: document.getElementById('cliComissionadoId').value,
+    aniversario: document.getElementById('cliAniversario').value || null,
+    comissionado_id: comissionadoIdVal ? Number(comissionadoIdVal) : null,
   };
+  let error;
   if(currentClienteId){
-    Object.assign(db.clientes.find(c=>c.id===currentClienteId), data);
+    ({ error } = await sbClient.from('eps_clientes').update(payload).eq('id', Number(currentClienteId)));
   } else {
-    db.clientes.push(Object.assign({id:uid(), criadoEm:new Date().toISOString()}, data));
+    ({ error } = await sbClient.from('eps_clientes').insert(payload));
   }
-  saveDB();
+  if(error){ alertaErro('Erro ao salvar cliente', error); return; }
   closeModal('modalCliente');
+  await refetch('clientes');
   renderClientes();
 }
 
-function deleteClienteCurrent(){
+async function deleteClienteCurrent(){
   if(!currentClienteId) return;
   if(!confirm('Remover cliente? As reservas associadas continuam no histórico.')) return;
-  db.clientes = db.clientes.filter(c=>c.id!==currentClienteId);
-  saveDB();
+  const { error } = await sbClient.from('eps_clientes').delete().eq('id', Number(currentClienteId));
+  if(error){ alertaErro('Erro ao remover cliente', error); return; }
   closeModal('modalCliente');
+  await refetch('clientes');
+  await refetch('reservas');
   renderClientes();
 }
 
@@ -1805,49 +1848,60 @@ function renderHistoricoEntregas(){
     </tr>`;
   }).join('') : '<tr class="empty-row"><td colspan="5">Nada entregue ainda.</td></tr>';
 }
-function moveEtapa(reservaId, novaEtapa){
-  const r = db.reservas.find(x=>x.id===reservaId);
-  if(r){ r.status = novaEtapa; saveDB(); renderKanban(); }
+async function moveEtapa(reservaId, novaEtapa){
+  const { error } = await sbClient.from('eps_reservas').update({ status: novaEtapa }).eq('id', Number(reservaId));
+  if(error){ alertaErro('Erro ao mover etapa', error); return; }
+  await refetch('reservas');
+  renderKanban();
 }
 
 /* ---------- FINANCEIRO ---------- */
 let finPeriod = new Date(); // mês em exibição no Financeiro
 
 function ymOf(d){ return d.toISOString().slice(0,7); }
-function finMoveMonth(delta){ finPeriod.setMonth(finPeriod.getMonth()+delta); renderFinanceiro(); }
-function finThisMonth(){ finPeriod = new Date(); renderFinanceiro(); }
+function rerenderPeriodo(){
+  if(document.getElementById('view-financeiro').classList.contains('on')) renderFinanceiro();
+  if(document.getElementById('view-dashboard').classList.contains('on')) renderDashboard();
+}
+function finMoveMonth(delta){ finPeriod.setMonth(finPeriod.getMonth()+delta); rerenderPeriodo(); }
+function finThisMonth(){ finPeriod = new Date(); rerenderPeriodo(); }
 
-function addDespesa(){
+async function addDespesa(){
   const desc = document.getElementById('despDesc').value.trim();
   const valor = Number(document.getElementById('despValor').value);
   const data = document.getElementById('despData').value || fmtDate(new Date());
   const categoria = document.getElementById('despCategoria').value;
   const recorrente = document.getElementById('despRecorrente').checked;
   if(!desc || !valor){ alert('Preencha descrição e valor.'); return; }
-  db.despesas.push({id:uid(), descricao:desc, valor, data, categoria, recorrente, pago:false});
-  saveDB();
+  const { error } = await sbClient.from('eps_despesas').insert({ descricao:desc, valor, data, categoria, recorrente, pago:false });
+  if(error){ alertaErro('Erro ao adicionar despesa', error); return; }
   document.getElementById('despDesc').value='';
   document.getElementById('despValor').value='';
   document.getElementById('despData').value='';
   document.getElementById('despRecorrente').checked=false;
+  await refetch('despesas');
+  renderFinanceiro();
+  alert('Despesa adicionada em Contas a pagar (Financeiro).');
+}
+async function deleteDespesa(id){
+  const { error } = await sbClient.from('eps_despesas').delete().eq('id', Number(id));
+  if(error){ alertaErro('Erro ao remover despesa', error); return; }
+  await refetch('despesas');
   renderFinanceiro();
 }
-function deleteDespesa(id){
-  db.despesas = db.despesas.filter(d=>d.id!==id);
-  saveDB();
-  renderFinanceiro();
-}
-function pagarDespesa(id){
+async function pagarDespesa(id){
   const d = db.despesas.find(x=>x.id===id);
   if(!d) return;
-  d.pago = true;
+  const { error } = await sbClient.from('eps_despesas').update({ pago:true }).eq('id', Number(id));
+  if(error){ alertaErro('Erro ao marcar despesa como paga', error); return; }
   if(d.recorrente){
     const prox = new Date(d.data+'T00:00:00');
     prox.setMonth(prox.getMonth()+1);
-    db.despesas.push({id:uid(), descricao:d.descricao, valor:d.valor, data:fmtDate(prox), categoria:d.categoria, recorrente:true, pago:false});
+    await sbClient.from('eps_despesas').insert({ descricao:d.descricao, valor:d.valor, data:fmtDate(prox), categoria:d.categoria, recorrente:true, pago:false });
   }
-  saveDB();
+  await refetch('despesas');
   renderFinanceiro();
+  if(document.getElementById('view-dashboard').classList.contains('on')) renderDashboard();
 }
 
 function renderFinanceiro(){
@@ -2057,104 +2111,120 @@ function openComissionadoModal(id){
   document.getElementById('comDeleteBtn').style.display = c ? 'inline-block' : 'none';
   document.getElementById('modalComissionado').classList.add('on');
 }
-function saveComissionado(){
+async function saveComissionado(){
   const nome = document.getElementById('comNome').value.trim();
   if(!nome){ alert('Informe o nome do comissionado.'); return; }
-  const data = {
+  const payload = {
     nome,
     whatsapp: document.getElementById('comWhats').value.trim(),
     pix: document.getElementById('comPix').value.trim(),
     pct: Number(document.getElementById('comPct').value) || 0,
     ativo: document.getElementById('comAtivo').checked,
   };
+  let error;
   if(currentComissionadoId){
-    Object.assign(db.comissionados.find(x=>x.id===currentComissionadoId), data);
+    ({ error } = await sbClient.from('eps_comissionados').update(payload).eq('id', Number(currentComissionadoId)));
   } else {
-    db.comissionados.push(Object.assign({id:uid(), criadoEm:new Date().toISOString()}, data));
+    ({ error } = await sbClient.from('eps_comissionados').insert(payload));
   }
-  saveDB();
+  if(error){ alertaErro('Erro ao salvar comissionado', error); return; }
   closeModal('modalComissionado');
+  await refetch('comissionados');
   renderComissionados();
 }
-function deleteComissionadoCurrent(){
+async function deleteComissionadoCurrent(){
   if(!currentComissionadoId) return;
   const emUso = db.clientes.some(c=>c.comissionadoId===currentComissionadoId);
   if(emUso && !confirm('Esse comissionado está vinculado a cliente(s). Remover mesmo assim? Os clientes ficam sem comissionado.')) return;
-  db.comissionados = db.comissionados.filter(x=>x.id!==currentComissionadoId);
-  db.clientes.forEach(c=>{ if(c.comissionadoId===currentComissionadoId) c.comissionadoId = ''; });
-  saveDB();
+  const { error } = await sbClient.from('eps_comissionados').delete().eq('id', Number(currentComissionadoId));
+  if(error){ alertaErro('Erro ao remover comissionado', error); return; }
   closeModal('modalComissionado');
+  await refetch('comissionados');
+  await refetch('clientes');
   renderComissionados();
 }
-function savePrazoRepasse(){
-  db.config.prazoRepasseDias = Number(document.getElementById('prazoRepasseInput').value);
-  if(isNaN(db.config.prazoRepasseDias)) db.config.prazoRepasseDias = 5;
-  saveDB();
-  alert('Prazo de repasse salvo: ' + db.config.prazoRepasseDias + ' dias.');
+async function savePrazoRepasse(){
+  const val = Number(document.getElementById('prazoRepasseInput').value);
+  const prazo = isNaN(val) ? 5 : val;
+  const { error } = await sbClient.from('eps_config').update({ prazo_repasse_dias: prazo }).eq('id', true);
+  if(error){ alertaErro('Erro ao salvar prazo de repasse', error); return; }
+  await refetch('config');
+  alert('Prazo de repasse salvo: ' + prazo + ' dias.');
 }
-/* ---------- Usuários ---------- */
-let currentUsuarioId = null;
-function openUsuarioModal(id){
-  currentUsuarioId = id;
-  const u = id ? db.usuarios.find(x=>x.id===id) : null;
+/* ---------- Usuários ----------
+   A senha mora só no Supabase Auth (painel Authentication → Users),
+   nunca nessa tabela. Aqui a gente só autoriza o e-mail e define o
+   perfil — por isso não tem campo de senha neste formulário. */
+let currentUsuarioEmail = null;
+function openUsuarioModal(email){
+  currentUsuarioEmail = email;
+  const u = email ? db.usuarios.find(x=>x.email===email) : null;
   document.getElementById('modalUsuarioTitle').textContent = u ? 'Editar usuário' : 'Novo usuário';
   document.getElementById('usuNome').value = u?.nome || '';
-  document.getElementById('usuLogin').value = u?.login || '';
-  document.getElementById('usuSenha').value = u?.senha || '';
+  document.getElementById('usuEmail').value = u?.email || '';
+  document.getElementById('usuEmail').disabled = !!u;
+  document.getElementById('usuApelido').value = u?.apelido || '';
   document.getElementById('usuRole').value = u?.role || 'operador';
-  document.getElementById('usuAtivo').checked = u ? !!u.ativo : true;
   document.getElementById('usuDeleteBtn').style.display = u ? 'inline-block' : 'none';
   document.getElementById('modalUsuario').classList.add('on');
 }
-function admsAtivosExcluindo(id){
-  return db.usuarios.filter(u=>u.id!==id && u.role==='admin' && u.ativo);
+function outrosAdmins(email){
+  return db.usuarios.filter(u=>u.email!==email && u.role==='admin');
 }
-function saveUsuario(){
+async function saveUsuario(){
   const nome = document.getElementById('usuNome').value.trim();
-  const login = document.getElementById('usuLogin').value.trim();
-  const senha = document.getElementById('usuSenha').value;
-  if(!nome || !login || !senha){ alert('Preencha nome, login e senha.'); return; }
-  const loginDuplicado = db.usuarios.find(u=>u.login===login && u.id!==currentUsuarioId);
-  if(loginDuplicado){ alert('Já existe um usuário com esse login.'); return; }
+  const email = document.getElementById('usuEmail').value.trim().toLowerCase();
+  const apelido = document.getElementById('usuApelido').value.trim().toLowerCase();
   const role = document.getElementById('usuRole').value;
-  const ativo = document.getElementById('usuAtivo').checked;
-  if(currentUsuarioId && (role!=='admin' || !ativo) && admsAtivosExcluindo(currentUsuarioId).length===0){
-    alert('Esse é o último Administrador ativo — não dá pra rebaixar ou desativar sem cadastrar outro admin antes.');
+  if(!nome || !email){ alert('Preencha nome e e-mail.'); return; }
+  if(currentUsuarioEmail && role!=='admin' && outrosAdmins(currentUsuarioEmail).length===0){
+    alert('Esse é o último Administrador — não dá pra rebaixar sem cadastrar outro admin antes.');
     return;
   }
-  const data = { nome, login, senha, role, ativo };
-  if(currentUsuarioId){
-    Object.assign(db.usuarios.find(x=>x.id===currentUsuarioId), data);
+  const payload = { nome, apelido: apelido || null, posicao: role==='admin' ? 'Administrador' : 'Operador' };
+  let error;
+  if(currentUsuarioEmail){
+    ({ error } = await sbClient.from('eps_usuarios').update(payload).eq('email', currentUsuarioEmail));
   } else {
-    db.usuarios.push(Object.assign({id:uid(), criadoEm:new Date().toISOString()}, data));
+    ({ error } = await sbClient.from('eps_usuarios').insert({ email, ...payload }));
   }
-  saveDB();
+  if(error){
+    alert(error.code==='23505' ? 'Já existe um usuário com esse e-mail ou apelido.' : 'Erro ao salvar usuário: ' + error.message);
+    return;
+  }
   closeModal('modalUsuario');
+  await refetch('usuarios');
   renderUsuarios();
+  if(usuarioAtual && usuarioAtual.email===(currentUsuarioEmail||email)) await carregarUsuarioAtual();
   applyRolePermissions();
 }
-function deleteUsuarioCurrent(){
-  if(!currentUsuarioId) return;
-  const alvo = db.usuarios.find(u=>u.id===currentUsuarioId);
-  if(alvo.role==='admin' && admsAtivosExcluindo(currentUsuarioId).length===0){
-    alert('Esse é o último Administrador ativo — cadastre outro admin antes de remover este.');
+async function deleteUsuarioCurrent(){
+  if(!currentUsuarioEmail) return;
+  const alvo = db.usuarios.find(u=>u.email===currentUsuarioEmail);
+  if(alvo.role==='admin' && outrosAdmins(currentUsuarioEmail).length===0){
+    alert('Esse é o último Administrador — cadastre outro admin antes de remover este.');
     return;
   }
-  if(!confirm(`Remover o usuário "${alvo.nome}"?`)) return;
-  db.usuarios = db.usuarios.filter(x=>x.id!==currentUsuarioId);
-  saveDB();
+  if(usuarioAtual && currentUsuarioEmail===usuarioAtual.email){
+    alert('Você não pode remover o próprio acesso enquanto está logado com ele.');
+    return;
+  }
+  if(!confirm(`Remover o acesso de "${alvo.nome}"? A conta de login no Supabase continua existindo, só perde a autorização de entrar aqui.`)) return;
+  const { error } = await sbClient.from('eps_usuarios').delete().eq('email', currentUsuarioEmail);
+  if(error){ alertaErro('Erro ao remover usuário', error); return; }
   closeModal('modalUsuario');
+  await refetch('usuarios');
   renderUsuarios();
 }
 function renderUsuarios(){
   const tbody = document.getElementById('usuariosTbody');
   tbody.innerHTML = db.usuarios.length ? db.usuarios.map(u=>`
-    <tr onclick="openUsuarioModal('${u.id}')" style="cursor:pointer;">
+    <tr onclick="openUsuarioModal('${u.email}')" style="cursor:pointer;">
       <td><b>${u.nome}</b></td>
-      <td>${u.login}</td>
+      <td>${u.email}</td>
+      <td>${u.apelido||'—'}</td>
       <td>${ROLE_LABELS[u.role]||u.role}</td>
-      <td><span class="badge ${u.ativo?'green':'gray'}">${u.ativo?'Ativo':'Inativo'}</span></td>
-      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openUsuarioModal('${u.id}')">Editar</button></td>
+      <td onclick="event.stopPropagation()"><button class="icon-btn" onclick="openUsuarioModal('${u.email}')">Editar</button></td>
     </tr>`).join('') : '<tr class="empty-row"><td colspan="5">Nenhum usuário cadastrado.</td></tr>';
 }
 
@@ -2172,7 +2242,7 @@ function renderComissionados(){
     </tr>`).join('') : '<tr class="empty-row"><td colspan="6">Nenhum comissionado cadastrado ainda.</td></tr>';
 }
 
-function gerarContasComissao(){
+async function gerarContasComissao(){
   const ym = ymOf(finPeriod);
   const prazo = db.config.prazoRepasseDias ?? 5;
   const reservasMes = db.reservas.filter(r=>r.data && r.data.startsWith(ym) && r.pagamento==='pago');
@@ -2189,7 +2259,7 @@ function gerarContasComissao(){
   const entradas = Object.entries(porComissionado).filter(([,v])=>v.valor>0);
   if(!entradas.length){ alert('Nenhuma comissão a gerar neste período.'); return; }
   let criadas = 0, atualizadas = 0, jaPagas = 0;
-  entradas.forEach(([comId,info])=>{
+  for(const [comId, info] of entradas){
     const com = db.comissionados.find(x=>x.id===comId);
     const desc = `Comissão — ${com.nome} (${ym})`;
     const vencData = new Date(info.ultimaData+'T00:00:00');
@@ -2197,23 +2267,29 @@ function gerarContasComissao(){
     const vencimento = fmtDate(vencData);
     const existente = db.despesas.find(d=>d.descricao===desc && d.categoria==='Salários/Comissões');
     if(existente){
-      if(existente.pago){ jaPagas++; }
-      else { existente.valor = info.valor; existente.data = vencimento; atualizadas++; }
+      if(existente.pago){
+        jaPagas++;
+      } else {
+        const { error } = await sbClient.from('eps_despesas').update({ valor: info.valor, data: vencimento }).eq('id', Number(existente.id));
+        if(!error) atualizadas++;
+      }
     } else {
-      db.despesas.push({id:uid(), descricao:desc, valor:info.valor, data: vencimento, categoria:'Salários/Comissões', recorrente:false, pago:false, comissionadoId:comId});
-      criadas++;
+      const { error } = await sbClient.from('eps_despesas').insert({ descricao:desc, valor:info.valor, data:vencimento, categoria:'Salários/Comissões', recorrente:false, pago:false, comissionado_id:Number(comId) });
+      if(!error) criadas++;
     }
-  });
-  saveDB();
+  }
+  await refetch('despesas');
   renderFinanceiro();
   alert(`${criadas} conta(s) criada(s), ${atualizadas} atualizada(s)${jaPagas?`, ${jaPagas} já estava(m) paga(s) (não mexi)`:''}. Veja em "Contas a pagar".`);
 }
 
-
-function saveMetaFaturamento(){
-  db.config.metaFaturamento = Number(document.getElementById('metaFaturamentoInput').value) || 0;
-  saveDB();
+async function saveMetaFaturamento(){
+  const meta = Number(document.getElementById('metaFaturamentoInput').value) || 0;
+  const { error } = await sbClient.from('eps_config').update({ meta_faturamento: meta }).eq('id', true);
+  if(error){ alertaErro('Erro ao salvar meta', error); return; }
+  await refetch('config');
   renderFinanceiro();
+  if(document.getElementById('view-dashboard').classList.contains('on')) renderDashboard();
 }
 
 /* ---------- Ocupação da sala ---------- */
@@ -2256,12 +2332,12 @@ function renderRankingClientes(){
   }
 }
 
-function marcarPago(reservaId){
-  const r = db.reservas.find(x=>x.id===reservaId);
-  if(!r) return;
-  r.pagamento = 'pago';
-  saveDB();
+async function marcarPago(reservaId){
+  const { error } = await sbClient.from('eps_reservas').update({ pagamento:'pago' }).eq('id', Number(reservaId));
+  if(error){ alertaErro('Erro ao marcar como pago', error); return; }
+  await refetch('reservas');
   renderFinanceiro();
+  if(document.getElementById('view-dashboard').classList.contains('on')) renderDashboard();
 }
 
 function cobrarCliente(reservaId){
