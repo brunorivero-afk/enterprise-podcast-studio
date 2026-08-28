@@ -610,7 +610,7 @@
       <div style="padding:104px max(24px, calc((100vw - 1180px) / 2)) 104px 64px;display:flex;flex-direction:column;justify-content:center">
         <span style="display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#e0b552;margin-bottom:16px">Nossa estrela</span>
         <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-size:44px;font-weight:800;line-height:1.05;letter-spacing:-.035em;margin:0 0 22px">Camila Rodrigues</h2>
-        <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:23px;font-weight:600;line-height:1.4;color:#f4f1ea;margin:0 0 22px;max-width:620px;text-wrap:pretty">"Mais de 20 anos de carreira nos palcos e nas telas — e agora dedicados também a ajudar histórias a encontrarem seu microfone."</p>
+        <p style="font-family:'Bricolage Grotesque',sans-serif;font-size:23px;font-weight:600;line-height:1.4;color:#f4f1ea;margin:0 0 22px;max-width:620px;text-wrap:pretty">“Mais de 20 anos de carreira nos palcos e nas telas — e agora dedicados também a ajudar histórias a encontrarem seu microfone.”</p>
         <p style="font-size:16.5px;color:#b3aca1;line-height:1.65;margin:0;max-width:620px;text-wrap:pretty">Atriz com mais de 20 anos de carreira, reconhecimento e sucesso consolidado, Camila Rodrigues é sócia do Enterprise Podcast Studio e leva sua experiência de palco e câmera para ajudar criadores a se comunicarem melhor — na frente e por trás do microfone.</p>
         <div style="margin-top:28px;display:inline-flex;align-self:flex-start;padding:8px 16px;border:1px solid rgba(224,181,82,.35);border-radius:100px;font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#e0b552">Sócia · Enterprise Podcast Studio</div>
       </div>
@@ -664,7 +664,7 @@
         <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:34px;display:flex;flex-direction:column">
           <h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;margin:0 0 10px">Fale com a gente</h3>
           <p style="font-size:14.5px;color:#b3aca1;line-height:1.6;margin:0 0 24px">O jeito mais rápido de saber disponibilidade e fechar sua gravação é chamando a gente direto no WhatsApp.</p>
-          <a href="#" id="whatsappBtn" style="display:inline-flex;align-self:flex-start;align-items:center;padding:14px 24px;border-radius:6px;font-size:14.5px;font-weight:700;background:#e0b552;color:#1a1400">Chamar no WhatsApp</a>
+          <a href="#" style="display:inline-flex;align-self:flex-start;align-items:center;padding:14px 24px;border-radius:6px;font-size:14.5px;font-weight:700;background:#e0b552;color:#1a1400">Chamar no WhatsApp</a>
           <p style="margin:auto 0 0;padding-top:22px;font-size:13px;color:#8c8479;line-height:1.6">Ou envie um e-mail para <a href="mailto:contato@enterprisepodcaststudio.com.br">contato@enterprisepodcaststudio.com.br</a><br>Av. das Américas, 3665, loja 230 — Shopping Barra Square Expansão, Barra da Tijuca, RJ</p>
         </div>
         <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:34px">
@@ -1484,7 +1484,9 @@ function applyRolePermissions(){
   }
 }
 
-/* Menu mobile do site público: toggleSiteMenu()/closeSiteMenu(), no script logo após #site */
+/* ---------- Menu mobile (site público) ---------- */
+function toggleMobileMenu(){ document.getElementById('mobileMenu').classList.toggle('on'); }
+function closeMobileMenu(){ document.getElementById('mobileMenu').classList.remove('on'); }
 
 /* ---------- Sidebar mobile (sistema interno) ---------- */
 function toggleSide(force){
