@@ -433,6 +433,7 @@
     #site h2 { font-size: 30px !important; }
     #sobre, #servicos, #precos, #faq, #contato { padding-top: 64px !important; padding-bottom: 64px !important; }
     #camila-media { aspect-ratio: 4 / 5 !important; min-height: 0 !important; }
+    #area-equipe-desk { display: none !important; }
   }
 </style>
 </head>
@@ -457,6 +458,7 @@
         <a href="#contato" style="font-size:14px;color:#b3aca1;font-weight:600">Contato</a>
       </nav>
       <div style="display:flex;align-items:center;gap:10px">
+        <button id="area-equipe-desk" onclick="requestAppAccess()" style="display:inline-flex;align-items:center;padding:11px 16px;border-radius:6px;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,.18);color:#b3aca1;background:none;cursor:pointer;white-space:nowrap">Área da Equipe</button>
         <a href="#contato" style="display:inline-flex;align-items:center;padding:11px 20px;border-radius:6px;font-size:13.5px;font-weight:700;background:#e0b552;color:#1a1400;white-space:nowrap">Agendar horário</a>
         <button id="nav-toggle" onclick="toggleSiteMenu()" aria-label="Abrir menu" style="display:none;background:none;border:1px solid rgba(255,255,255,.18);border-radius:6px;color:#f4f1ea;font-size:17px;line-height:1;padding:10px 13px;cursor:pointer">☰</button>
       </div>
@@ -468,7 +470,8 @@
       <a href="#precos" onclick="closeSiteMenu()" style="padding:15px 2px;font-size:15px;font-weight:600;color:#b3aca1;border-bottom:1px solid rgba(255,255,255,.07)">Valores</a>
       <a href="#faq" onclick="closeSiteMenu()" style="padding:15px 2px;font-size:15px;font-weight:600;color:#b3aca1;border-bottom:1px solid rgba(255,255,255,.07)">Dúvidas</a>
       <a href="#camila" onclick="closeSiteMenu()" style="padding:15px 2px;font-size:15px;font-weight:600;color:#b3aca1;border-bottom:1px solid rgba(255,255,255,.07)">Camila Rodrigues</a>
-      <a href="#contato" onclick="closeSiteMenu()" style="padding:15px 2px;font-size:15px;font-weight:600;color:#b3aca1">Contato</a>
+      <a href="#contato" onclick="closeSiteMenu()" style="padding:15px 2px;font-size:15px;font-weight:600;color:#b3aca1;border-bottom:1px solid rgba(255,255,255,.07)">Contato</a>
+      <button onclick="closeSiteMenu(); requestAppAccess();" style="text-align:left;padding:15px 2px;font-size:15px;font-weight:600;color:#e0b552;background:none;border:none;cursor:pointer">Área da Equipe →</button>
     </div>
   </header>
 
