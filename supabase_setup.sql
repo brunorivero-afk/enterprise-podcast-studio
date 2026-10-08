@@ -1,4 +1,4 @@
--- Enterprise Podcast Studio — setup Supabase
+-- K Studios Produções (antes Enterprise Podcast Studio) — setup Supabase
 -- Rodar no SQL Editor do projeto pxcqyzbgfbwwkazmonzx (mesmo projeto do
 -- BIG GTD / Finanças Casa / Agenda Renata / CBS)
 -- Tabelas prefixadas "eps_" pra ficar isolado dos outros apps no mesmo projeto.
